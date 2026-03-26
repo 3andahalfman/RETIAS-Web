@@ -34,7 +34,7 @@ export async function POST(req: Request) {
       email: email.trim(),
       password,
       user_metadata: { display_name: displayName.trim() },
-      email_confirm: false, // set to true if you require email verification
+      email_confirm: true,
     })
 
     if (authErr || !authData.user)
