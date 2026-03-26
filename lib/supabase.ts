@@ -17,6 +17,7 @@ export interface PastSession {
   started_at: string
   ended_at: string | null
   qa_count: number
+  session_type: string | null
 }
 
 export interface SessionQA {
