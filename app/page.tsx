@@ -86,7 +86,7 @@ export default function LandingPage() {
 
         {/* Social proof */}
         <p style={{ marginTop: 32, fontSize: 13, color: 'rgba(255,255,255,0.3)' }}>
-          Free to use · No credit card required · Works on Windows &amp; macOS
+          Free to use · No credit card required · Windows desktop app available
         </p>
       </section>
 
