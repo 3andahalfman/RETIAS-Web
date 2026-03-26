@@ -5,22 +5,34 @@ import Link from 'next/link'
 export default function LandingPage() {
   return (
     <div style={{ background: '#09090f', color: 'rgba(255,255,255,0.92)', fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif", minHeight: '100vh' }}>
+      <style>{`
+        .landing-hero { padding: 100px 24px 80px; }
+        .landing-section { padding: 80px 24px; }
+        .landing-cta-section { padding: 40px 24px 100px; }
+        .cta-banner-inner { padding: 64px 40px; }
+        @media (max-width: 768px) {
+          .landing-hero { padding: 64px 20px 48px; }
+          .landing-section { padding: 52px 20px; }
+          .landing-cta-section { padding: 24px 20px 64px; }
+          .cta-banner-inner { padding: 36px 24px; }
+        }
+      `}</style>
 
       {/* ── Navbar ── */}
       <nav style={{ position: 'sticky', top: 0, zIndex: 50, borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'rgba(9,9,15,0.85)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', height: 60, gap: 32 }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 20px', display: 'flex', alignItems: 'center', height: 60, gap: 16 }}>
           {/* Logo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
             <div style={{ width: 32, height: 32, borderRadius: 8, background: 'linear-gradient(135deg,#3b82f6,#60a5fa)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 16px rgba(59,130,246,0.4)' }}>
               <span style={{ color: '#fff', fontWeight: 900, fontSize: 14 }}>R</span>
             </div>
             <span style={{ fontWeight: 700, fontSize: 15, color: 'rgba(255,255,255,0.92)' }}>RETIAS</span>
           </div>
 
-          {/* Nav links */}
-          <div style={{ display: 'flex', gap: 28, flex: 1 }}>
+          {/* Nav links – hidden on mobile */}
+          <div className="hidden md:flex items-center" style={{ gap: 28, flex: 1 }}>
             {[['#features', 'Features'], ['#how', 'How it works'], ['#pricing', 'Pricing']].map(([href, label]) => (
-              <a key={href} href={href} style={{ fontSize: 14, color: 'rgba(255,255,255,0.55)', textDecoration: 'none', transition: 'color 0.15s' }}
+              <a key={href} href={href} style={{ fontSize: 14, color: 'rgba(255,255,255,0.55)', textDecoration: 'none', transition: 'color 0.15s', whiteSpace: 'nowrap' }}
                 onMouseOver={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.92)')}
                 onMouseOut={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.55)')}>
                 {label}
@@ -28,10 +40,13 @@ export default function LandingPage() {
             ))}
           </div>
 
+          {/* Spacer on mobile (pushes CTA to the right) */}
+          <div className="flex-1 md:hidden" />
+
           {/* CTA */}
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <Link href="/login" style={{ fontSize: 14, color: 'rgba(255,255,255,0.65)', textDecoration: 'none', padding: '7px 16px' }}>Sign in</Link>
-            <Link href="/login" style={{ fontSize: 14, fontWeight: 600, color: '#fff', background: 'linear-gradient(135deg,#3b82f6,#2563eb)', borderRadius: 8, padding: '7px 18px', textDecoration: 'none', boxShadow: '0 0 16px rgba(59,130,246,0.3)' }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
+            <Link href="/login" className="hidden md:block" style={{ fontSize: 14, color: 'rgba(255,255,255,0.65)', textDecoration: 'none', padding: '7px 14px', whiteSpace: 'nowrap' }}>Sign in</Link>
+            <Link href="/login" style={{ fontSize: 14, fontWeight: 600, color: '#fff', background: 'linear-gradient(135deg,#3b82f6,#2563eb)', borderRadius: 8, padding: '7px 14px', textDecoration: 'none', boxShadow: '0 0 16px rgba(59,130,246,0.3)', whiteSpace: 'nowrap' }}>
               Get started free
             </Link>
           </div>
@@ -39,7 +54,7 @@ export default function LandingPage() {
       </nav>
 
       {/* ── Hero ── */}
-      <section style={{ maxWidth: 1100, margin: '0 auto', padding: '100px 24px 80px', textAlign: 'center', position: 'relative' }}>
+      <section className="landing-hero" style={{ maxWidth: 1100, margin: '0 auto', textAlign: 'center', position: 'relative' }}>
         {/* Glow */}
         <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 700, height: 400, background: 'radial-gradient(ellipse at 50% 0%, rgba(59,130,246,0.18) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
@@ -76,7 +91,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── Features ── */}
-      <section id="features" style={{ maxWidth: 1100, margin: '0 auto', padding: '80px 24px' }}>
+      <section id="features" className="landing-section" style={{ maxWidth: 1100, margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: 56 }}>
           <h2 style={{ fontSize: 36, fontWeight: 700, marginBottom: 14, letterSpacing: '-0.5px' }}>Everything you need to land the job</h2>
           <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 16, maxWidth: 480, margin: '0 auto' }}>
@@ -84,7 +99,7 @@ export default function LandingPage() {
           </p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>
           {FEATURES.map(f => (
             <div key={f.title} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '28px 28px' }}>
               <div style={{ width: 44, height: 44, borderRadius: 12, background: f.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, marginBottom: 18 }}>
@@ -98,7 +113,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── Session Types ── */}
-      <section id="how" style={{ maxWidth: 1100, margin: '0 auto', padding: '80px 24px' }}>
+      <section id="how" className="landing-section" style={{ maxWidth: 1100, margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: 56 }}>
           <h2 style={{ fontSize: 36, fontWeight: 700, marginBottom: 14, letterSpacing: '-0.5px' }}>Three modes. Every scenario covered.</h2>
           <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 16, maxWidth: 480, margin: '0 auto' }}>
@@ -106,7 +121,7 @@ export default function LandingPage() {
           </p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>
           {SESSION_TYPES.map(t => (
             <div key={t.title} style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${t.borderColor}`, borderRadius: 16, padding: 28 }}>
               <div style={{ width: 44, height: 44, borderRadius: 12, background: t.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, marginBottom: 18 }}>
@@ -121,7 +136,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── Pricing ── */}
-      <section id="pricing" style={{ maxWidth: 1100, margin: '0 auto', padding: '80px 24px' }}>
+      <section id="pricing" className="landing-section" style={{ maxWidth: 1100, margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: 56 }}>
           <h2 style={{ fontSize: 36, fontWeight: 700, marginBottom: 14, letterSpacing: '-0.5px' }}>Simple pricing</h2>
           <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 16 }}>Start free. Upgrade when you&apos;re ready.</p>
@@ -159,8 +174,8 @@ export default function LandingPage() {
       </section>
 
       {/* ── CTA Banner ── */}
-      <section style={{ maxWidth: 1100, margin: '0 auto', padding: '40px 24px 100px' }}>
-        <div style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.15), rgba(139,92,246,0.1))', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 24, padding: '64px 40px', textAlign: 'center' }}>
+      <section className="landing-cta-section" style={{ maxWidth: 1100, margin: '0 auto' }}>
+        <div className="cta-banner-inner" style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.15), rgba(139,92,246,0.1))', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 24, textAlign: 'center' }}>
           <h2 style={{ fontSize: 36, fontWeight: 700, marginBottom: 14, letterSpacing: '-0.5px' }}>Ready to ace your next interview?</h2>
           <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 16, maxWidth: 440, margin: '0 auto 36px' }}>
             Join thousands of candidates using RETIAS to perform at their best.
@@ -178,8 +193,8 @@ export default function LandingPage() {
       </section>
 
       {/* ── Footer ── */}
-      <footer style={{ borderTop: '1px solid rgba(255,255,255,0.07)', padding: '32px 24px' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+      <footer style={{ borderTop: '1px solid rgba(255,255,255,0.07)', padding: '32px 20px' }}>
+        <div className="footer-inner" style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 28, height: 28, borderRadius: 7, background: 'linear-gradient(135deg,#3b82f6,#60a5fa)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <span style={{ color: '#fff', fontWeight: 900, fontSize: 12 }}>R</span>
