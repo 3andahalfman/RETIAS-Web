@@ -13,6 +13,7 @@
     "@anthropic-ai/sdk": "^0.80.0",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.99.1",
+    "@vercel/speed-insights": "^2.0.0",
     "mammoth": "^1.12.0",
     "next": "^14.2.29",
     "pdf-parse": "^2.4.5",
