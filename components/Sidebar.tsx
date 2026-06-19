@@ -5,12 +5,18 @@ import { useState, useEffect } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase'
 
+const ADMIN_EMAIL = 'admin@retias.com'
+
 const NAV = [
   { href: '/dashboard',                   icon: '⚡',  label: 'Overview' },
   { href: '/dashboard/sessions',          icon: '🎙️', label: 'Sessions' },
   { href: '/dashboard/cvs',              icon: '📄',  label: 'CV Manager' },
   { href: '/dashboard/resume-optimizer', icon: '✨',  label: 'Resume Optimizer' },
   { href: '/dashboard/settings',         icon: '⚙️',  label: 'Settings' },
+]
+
+const ADMIN_NAV = [
+  { href: '/dashboard/screenshots', icon: '📸', label: 'Screenshot Library' },
 ]
 
 export default function Sidebar({ user, isPremium }: { user: User; isPremium: boolean }) {
@@ -61,7 +67,10 @@ export default function Sidebar({ user, isPremium }: { user: User; isPremium: bo
 
       {/* Nav */}
       <nav className="flex-1 px-2 py-3 space-y-0.5">
-        {NAV.map(({ href, icon, label }) => {
+        {[
+          ...NAV,
+          ...((user.email ?? '').toLowerCase() === ADMIN_EMAIL ? ADMIN_NAV : []),
+        ].map(({ href, icon, label }) => {
           const active = pathname === href || (href !== '/dashboard' && pathname.startsWith(href))
           return (
             <a key={href} href={href} title={collapsed ? label : undefined}
