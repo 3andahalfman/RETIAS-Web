@@ -142,7 +142,7 @@ export default function LandingPage() {
           <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 16 }}>Start free. Upgrade when you&apos;re ready.</p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, maxWidth: 700, margin: '0 auto' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, maxWidth: 1060, margin: '0 auto' }}>
           {/* Free */}
           <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: 32, display: 'flex', flexDirection: 'column' }}>
             <p style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.4)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Free</p>
@@ -167,6 +167,20 @@ export default function LandingPage() {
               <a href="mailto:support@retias.app?subject=Premium%20Upgrade"
                 style={{ display: 'block', textAlign: 'center', fontSize: 14, fontWeight: 600, color: '#fff', background: 'linear-gradient(135deg,#3b82f6,#2563eb)', borderRadius: 10, padding: '11px 0', textDecoration: 'none', boxShadow: '0 0 20px rgba(59,130,246,0.3)' }}>
                 Upgrade to Pro
+              </a>
+            </div>
+          </div>
+
+          {/* Pro Plus */}
+          <div style={{ background: 'linear-gradient(145deg, rgba(245,158,11,0.10), rgba(251,146,60,0.06))', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 20, padding: 32, position: 'relative', display: 'flex', flexDirection: 'column' }}>
+            <p style={{ fontSize: 13, fontWeight: 600, color: '#fbbf24', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Pro Plus</p>
+            <p style={{ fontSize: 42, fontWeight: 800, marginBottom: 4 }}>$25</p>
+            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 28 }}>per month</p>
+            {PRO_PLUS_FEATURES.map(f => <FeatureRow key={f} label={f} gold />)}
+            <div style={{ marginTop: 'auto', paddingTop: 28 }}>
+              <a href="mailto:support@retias.app?subject=Pro%20Plus%20Upgrade"
+                style={{ display: 'block', textAlign: 'center', fontSize: 14, fontWeight: 600, color: '#fff', background: 'linear-gradient(135deg,#f59e0b,#d97706)', borderRadius: 10, padding: '11px 0', textDecoration: 'none', boxShadow: '0 0 20px rgba(245,158,11,0.3)' }}>
+                Upgrade to Pro Plus
               </a>
             </div>
           </div>
@@ -213,10 +227,11 @@ export default function LandingPage() {
   )
 }
 
-function FeatureRow({ label, accent }: { label: string; accent?: boolean }) {
+function FeatureRow({ label, accent, gold }: { label: string; accent?: boolean; gold?: boolean }) {
+  const checkColor = gold ? '#fbbf24' : accent ? '#60a5fa' : '#34d399'
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-      <span style={{ fontSize: 14, color: accent ? '#60a5fa' : '#34d399' }}>✓</span>
+      <span style={{ fontSize: 14, color: checkColor }}>✓</span>
       <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.65)' }}>{label}</span>
     </div>
   )
@@ -239,3 +254,4 @@ const SESSION_TYPES = [
 
 const FREE_FEATURES = ['5 sessions per month', 'Real-time transcription', 'Mock Interview mode', 'Session history', 'CV Manager (3 CVs)']
 const PRO_FEATURES  = ['Unlimited sessions', 'AI Screen Analysis', 'Manual prompt bar', 'Online Test & Onboarding', 'Resume Optimizer', 'Unlimited CV storage', 'Priority support']
+const PRO_PLUS_FEATURES = ['Everything in Pro', 'Top-tier AI (Claude Opus & GPT-5)', 'Custom branded reports & exports', 'Early access to new features', 'Dedicated support channel']
