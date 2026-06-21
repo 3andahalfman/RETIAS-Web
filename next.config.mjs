@@ -22,11 +22,12 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",   // Next.js requires unsafe-eval in dev
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.paystack.co",   // Next.js requires unsafe-eval in dev; Paystack inline.js
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob:",
+              "img-src 'self' data: blob: https://*.paystack.co https://*.paystack.com",
               "font-src 'self'",
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.anthropic.com",
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.paystack.co https://*.paystack.co",
+              "frame-src https://checkout.paystack.com https://*.paystack.com https://*.paystack.co",
               "frame-ancestors 'none'",
             ].join('; '),
           },

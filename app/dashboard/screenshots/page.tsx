@@ -5,7 +5,6 @@ import { createClient } from '@/lib/supabase'
 
 const ADMIN_EMAIL = 'admin@retias.com'
 const STORAGE_BUCKET = 'online-test-screenshots'
-const SCREENSHOT_PATH_REGEX = /^[\w-]+\/[\w-]+\/\d+\.png$/
 
 interface OnlineTestCapture {
   id: string
@@ -20,6 +19,10 @@ interface OnlineTestCapture {
   score_completeness: number | null
   score_overall: number | null
   score_notes: string | null
+  extracted_questions: string | null
+  detected_test_type: string | null
+  detected_platform: string | null
+  source_url: string | null
   created_at: string
 }
 
@@ -45,6 +48,16 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
+async function deleteCaptures(ids: string[], paths: string[]): Promise<void> {
+  const supabase = createClient()
+  if (paths.length) {
+    const { error: storageErr } = await supabase.storage.from(STORAGE_BUCKET).remove(paths)
+    if (storageErr) console.warn('[ScreenshotLibrary] storage delete error:', storageErr.message)
+  }
+  const { error } = await supabase.from('online_test_captures').delete().in('id', ids)
+  if (error) throw new Error(error.message)
+}
+
 export default function ScreenshotLibraryPage() {
   const [captures, setCaptures] = useState<OnlineTestCapture[]>([])
   const [stats, setStats] = useState<CaptureStats | null>(null)
@@ -52,18 +65,7 @@ export default function ScreenshotLibraryPage() {
   const [error, setError] = useState<string | null>(null)
   const [forbidden, setForbidden] = useState(false)
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [thumbUrls, setThumbUrls] = useState<Record<string, string>>({})
-  const [detailUrls, setDetailUrls] = useState<string[]>([])
-
-  const fetchUrl = useCallback(async (path: string): Promise<string | null> => {
-    if (!SCREENSHOT_PATH_REGEX.test(path)) return null
-    const supabase = createClient()
-    const { data, error } = await supabase.storage
-      .from(STORAGE_BUCKET)
-      .createSignedUrl(path, 3600)
-    if (error) return null
-    return data?.signedUrl ?? null
-  }, [])
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set())
 
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -112,41 +114,38 @@ export default function ScreenshotLibraryPage() {
 
   useEffect(() => { loadData() }, [loadData])
 
-  useEffect(() => {
-    if (!captures.length) return
-    let cancelled = false
+  const handleDeleteCapture = useCallback(async (cap: OnlineTestCapture) => {
+    if (!confirm(`Delete this capture from ${cap.user_email}? This removes the screenshots and AI answer permanently.`)) return
+    setDeletingIds(prev => new Set(prev).add(cap.id))
+    try {
+      await deleteCaptures([cap.id], cap.screenshot_paths)
+      setCaptures(prev => prev.filter(c => c.id !== cap.id))
+      if (selectedId === cap.id) setSelectedId(null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete capture')
+    } finally {
+      setDeletingIds(prev => { const n = new Set(prev); n.delete(cap.id); return n })
+    }
+  }, [selectedId])
 
-    ;(async () => {
-      const urls: Record<string, string> = {}
-      await Promise.all(captures.slice(0, 50).map(async (cap) => {
-        const path = cap.screenshot_paths[0]
-        if (!path) return
-        const url = await fetchUrl(path)
-        if (url && !cancelled) urls[cap.id] = url
-      }))
-      if (!cancelled) setThumbUrls(urls)
-    })()
-
-    return () => { cancelled = true }
-  }, [captures, fetchUrl])
+  const handleDeleteSession = useCallback(async (caps: OnlineTestCapture[]) => {
+    const sessionLabel = caps[0].session_id ? `session ${caps[0].session_id.slice(0, 8)}` : 'this group'
+    if (!confirm(`Delete all ${caps.length} captures in ${sessionLabel}? This cannot be undone.`)) return
+    const ids = caps.map(c => c.id)
+    setDeletingIds(prev => { const n = new Set(prev); ids.forEach(i => n.add(i)); return n })
+    try {
+      const paths = caps.flatMap(c => c.screenshot_paths)
+      await deleteCaptures(ids, paths)
+      setCaptures(prev => prev.filter(c => !ids.includes(c.id)))
+      if (selectedId && ids.includes(selectedId)) setSelectedId(null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete session')
+    } finally {
+      setDeletingIds(prev => { const n = new Set(prev); ids.forEach(i => n.delete(i)); return n })
+    }
+  }, [selectedId])
 
   const selected = captures.find((c) => c.id === selectedId) ?? null
-
-  useEffect(() => {
-    if (!selected) { setDetailUrls([]); return }
-    let cancelled = false
-
-    ;(async () => {
-      const urls: string[] = []
-      for (const path of selected.screenshot_paths) {
-        const url = await fetchUrl(path)
-        if (url) urls.push(url)
-      }
-      if (!cancelled) setDetailUrls(urls)
-    })()
-
-    return () => { cancelled = true }
-  }, [selected, fetchUrl])
 
   if (forbidden) {
     return (
@@ -206,44 +205,96 @@ export default function ScreenshotLibraryPage() {
           <p className="text-4xl mb-3">📸</p>
           <p className="text-sm" style={{ color: 'var(--text-2)' }}>No captures yet.</p>
           <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>
-            They appear when users run Online Test in the desktop app and click Analyse All.
+            They appear when users run Online Assessment in the desktop app and click Analyse All.
           </p>
         </div>
       )}
 
       <div className="grid gap-4" style={{ gridTemplateColumns: selected ? '1fr 1fr' : '1fr' }}>
-        {/* List */}
-        <div className="space-y-2">
-          {captures.map((cap) => (
-            <button
-              key={cap.id}
-              type="button"
-              onClick={() => setSelectedId(cap.id)}
-              className="w-full flex items-center gap-3 rounded-xl p-3 text-left transition-colors hover:bg-white/5"
-              style={{
-                background: selectedId === cap.id ? 'rgba(59,130,246,0.1)' : 'var(--surface)',
-                border: `1px solid ${selectedId === cap.id ? 'rgba(59,130,246,0.3)' : 'var(--border)'}`,
-              }}
-            >
-              <div className="w-14 h-14 rounded-lg overflow-hidden shrink-0 flex items-center justify-center"
-                style={{ background: 'rgba(0,0,0,0.3)' }}>
-                {thumbUrls[cap.id]
-                  ? <img src={thumbUrls[cap.id]} alt="" className="w-full h-full object-cover" />
-                  : <span className="text-xl">📸</span>}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate" style={{ color: 'var(--text-1)' }}>
-                  {formatTestType(cap.test_type)}
-                </p>
-                <p className="text-xs truncate" style={{ color: 'var(--text-3)' }}>
-                  {cap.user_email} · {formatDate(cap.created_at)}
-                </p>
-              </div>
-              <div className="text-lg font-bold shrink-0" style={{ color: scoreColor(cap.score_overall) }}>
-                {cap.score_overall != null ? Math.round(cap.score_overall) : '—'}
-              </div>
-            </button>
-          ))}
+        {/* List, grouped by session */}
+        <div className="space-y-4">
+          {(() => {
+            const groups = new Map<string, OnlineTestCapture[]>()
+            for (const cap of captures) {
+              const key = cap.session_id ?? `solo-${cap.id}`
+              const arr = groups.get(key) ?? []
+              arr.push(cap)
+              groups.set(key, arr)
+            }
+            return Array.from(groups.entries()).map(([sessionKey, caps]) => {
+              const head = caps[0]
+              const groupLabel = sessionKey.startsWith('solo-')
+                ? `Single capture · ${formatDate(head.created_at)}`
+                : `Session ${sessionKey.slice(0, 8)} · ${caps.length} capture${caps.length === 1 ? '' : 's'}`
+              return (
+                <div key={sessionKey}>
+                  <div className="flex items-center justify-between mb-2 pb-1 border-b"
+                    style={{ borderColor: 'var(--border)' }}>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider"
+                      style={{ color: 'var(--text-3)' }}>
+                      <span>{groupLabel}</span>
+                      <span className="ml-2 opacity-70">{head.user_email}</span>
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteSession(caps)}
+                      className="text-[10px] font-medium px-2 py-1 rounded-md hover:bg-red-500/10"
+                      style={{ color: '#f87171', border: '1px solid var(--border)' }}
+                    >
+                      🗑 Delete all
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    {caps.map((cap) => (
+                      <button
+                        key={cap.id}
+                        type="button"
+                        onClick={() => setSelectedId(cap.id)}
+                        className="w-full flex items-center gap-3 rounded-xl p-3 text-left transition-colors hover:bg-white/5"
+                        style={{
+                          background: selectedId === cap.id ? 'rgba(59,130,246,0.1)' : 'var(--surface)',
+                          border: `1px solid ${selectedId === cap.id ? 'rgba(59,130,246,0.3)' : 'var(--border)'}`,
+                        }}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate" style={{ color: 'var(--text-1)' }}>
+                            {formatTestType(cap.detected_test_type || cap.test_type)}
+                            {cap.detected_platform && (
+                              <span className="ml-2 text-xs font-normal" style={{ color: '#60a5fa' }}>· {cap.detected_platform}</span>
+                            )}
+                          </p>
+                          <p className="text-xs truncate" style={{ color: 'var(--text-3)' }}>
+                            {formatDate(cap.created_at)} · {cap.screenshot_count} img
+                          </p>
+                          {cap.source_url && (
+                            <p className="text-[10px] truncate font-mono" style={{ color: '#60a5fa' }}>
+                              {cap.source_url}
+                            </p>
+                          )}
+                        </div>
+                        <div className="text-lg font-bold shrink-0" style={{ color: scoreColor(cap.score_overall) }}>
+                          {cap.score_overall != null ? Math.round(cap.score_overall) : '—'}
+                        </div>
+                        <span
+                          role="button"
+                          onClick={(e) => { e.stopPropagation(); handleDeleteCapture(cap) }}
+                          className="text-base p-1 rounded-md hover:bg-red-500/10 shrink-0 cursor-pointer select-none"
+                          style={{
+                            color: '#f87171',
+                            opacity: deletingIds.has(cap.id) ? 0.4 : 1,
+                            pointerEvents: deletingIds.has(cap.id) ? 'none' : undefined,
+                          }}
+                          title="Delete this capture"
+                        >
+                          {deletingIds.has(cap.id) ? '…' : '🗑'}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )
+            })
+          })()}
         </div>
 
         {/* Detail */}
@@ -251,8 +302,17 @@ export default function ScreenshotLibraryPage() {
           <div className="rounded-xl p-4 self-start" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
             <div className="flex items-center justify-between mb-4">
               <div>
-                <p className="text-sm font-bold" style={{ color: 'var(--text-1)' }}>{formatTestType(selected.test_type)}</p>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{selected.user_email} · {formatDate(selected.created_at)}</p>
+                <p className="text-sm font-bold" style={{ color: 'var(--text-1)' }}>{formatTestType(selected.detected_test_type || selected.test_type)}</p>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
+                  {selected.user_email} · {formatDate(selected.created_at)}
+                  {selected.detected_platform && <> · {selected.detected_platform}</>}
+                  {selected.session_id && <> · session {selected.session_id.slice(0, 8)}</>}
+                </p>
+                {selected.source_url && (
+                  <p className="text-[11px] mt-1 font-mono break-all" style={{ color: '#60a5fa' }}>
+                    {selected.source_url}
+                  </p>
+                )}
               </div>
               <button type="button" onClick={() => setSelectedId(null)}
                 className="text-lg leading-none" style={{ color: 'var(--text-3)' }}>✕</button>
@@ -270,12 +330,15 @@ export default function ScreenshotLibraryPage() {
               </p>
             )}
 
-            <div className="space-y-2 mb-4">
-              {detailUrls.map((url, i) => (
-                <img key={url} src={url} alt={`Screenshot ${i + 1}`}
-                  className="w-full rounded-lg" style={{ border: '1px solid var(--border)' }} />
-              ))}
-            </div>
+            {selected.extracted_questions && (
+              <>
+                <p className="text-xs font-semibold mb-2" style={{ color: 'var(--text-2)' }}>Questions</p>
+                <pre className="text-xs leading-relaxed p-3 rounded-lg overflow-auto max-h-80 mb-4"
+                  style={{ background: 'rgba(0,0,0,0.3)', color: 'var(--text-2)', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                  {selected.extracted_questions}
+                </pre>
+              </>
+            )}
 
             <p className="text-xs font-semibold mb-2" style={{ color: 'var(--text-2)' }}>AI Answer</p>
             <pre className="text-xs leading-relaxed p-3 rounded-lg overflow-auto max-h-80"

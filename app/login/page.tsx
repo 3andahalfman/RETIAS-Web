@@ -6,6 +6,13 @@ import { createClient } from '@/lib/supabase'
 
 type Mode = 'signin' | 'signup'
 
+// Where to send the user after auth. Honors ?next= but only for internal paths.
+function getNextPath(): string {
+  if (typeof window === 'undefined') return '/dashboard'
+  const n = new URLSearchParams(window.location.search).get('next')
+  return n && n.startsWith('/') && !n.startsWith('//') ? n : '/dashboard'
+}
+
 function friendlyError(err: any): string {
   const msg = (err?.message ?? '').toLowerCase()
   if (msg.includes('invalid login') || msg.includes('invalid credentials') || msg.includes('wrong password'))
@@ -49,6 +56,8 @@ export default function LoginPage() {
   const [loading, setLoading]     = useState(false)
   const [error, setError]         = useState('')
   const [pwFocused, setPwFocused] = useState(false)
+  const [showPw, setShowPw]       = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
 
   // Display name availability
   const [nameStatus, setNameStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle')
@@ -97,7 +106,7 @@ export default function LoginPage() {
       if (mode === 'signin') {
         const { error: err } = await supabase.auth.signInWithPassword({ email, password })
         if (err) throw err
-        router.push('/dashboard')
+        router.push(getNextPath())
         router.refresh()
       } else {
         // Use server-side registration to enforce unique display name
@@ -116,7 +125,7 @@ export default function LoginPage() {
           switchMode('signin')
           return
         }
-        router.push('/dashboard')
+        router.push(getNextPath())
         router.refresh()
       }
     } catch (err) {
@@ -130,7 +139,7 @@ export default function LoginPage() {
     setError('')
     const { error: err } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(getNextPath())}` },
     })
     if (err) setError(friendlyError(err))
   }
@@ -193,12 +202,16 @@ export default function LoginPage() {
               value={email} onChange={e => setEmail(e.target.value)} required />
 
             <div>
-              <input className="input" type="password" placeholder="Password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                onFocus={() => setPwFocused(true)}
-                onBlur={() => setPwFocused(false)}
-                required />
+              <div style={{ position: 'relative' }}>
+                <input className="input" type={showPw ? 'text' : 'password'} placeholder="Password"
+                  style={{ paddingRight: 42 }}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  onFocus={() => setPwFocused(true)}
+                  onBlur={() => setPwFocused(false)}
+                  required />
+                <EyeButton shown={showPw} onClick={() => setShowPw(s => !s)} />
+              </div>
 
               {/* Strength checklist */}
               {mode === 'signup' && (pwFocused || password.length > 0) && (
@@ -219,8 +232,12 @@ export default function LoginPage() {
 
             {mode === 'signup' && (
               <div>
-                <input className="input" type="password" placeholder="Confirm password"
-                  value={confirm} onChange={e => setConfirm(e.target.value)} required />
+                <div style={{ position: 'relative' }}>
+                  <input className="input" type={showConfirm ? 'text' : 'password'} placeholder="Confirm password"
+                    style={{ paddingRight: 42 }}
+                    value={confirm} onChange={e => setConfirm(e.target.value)} required />
+                  <EyeButton shown={showConfirm} onClick={() => setShowConfirm(s => !s)} />
+                </div>
                 {confirm.length > 0 && (
                   <p className="text-xs mt-1.5 ml-1" style={{ color: passwordsMatch ? '#34d399' : '#f87171' }}>
                     {passwordsMatch ? '✓ Passwords match.' : '✗ Passwords do not match.'}
@@ -259,5 +276,25 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+function EyeButton({ shown, onClick }: { shown: boolean; onClick: () => void }) {
+  return (
+    <button type="button" onClick={onClick} tabIndex={-1}
+      aria-label={shown ? 'Hide password' : 'Show password'}
+      style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.5)', padding: 6, display: 'flex', alignItems: 'center' }}>
+      {shown ? (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+          <line x1="1" y1="1" x2="23" y2="23" />
+        </svg>
+      ) : (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+          <circle cx="12" cy="12" r="3" />
+        </svg>
+      )}
+    </button>
   )
 }

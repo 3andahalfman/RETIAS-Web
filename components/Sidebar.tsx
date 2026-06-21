@@ -123,7 +123,7 @@ export default function Sidebar({ user, isPremium }: { user: User; isPremium: bo
       {!isPremium && (
         <div className="px-2 pb-2">
           {collapsed ? (
-            <a href="mailto:support@retias.app?subject=Premium%20Upgrade"
+            <a href="/pricing"
               title="Upgrade to Premium"
               className="flex justify-center items-center py-2 rounded-xl transition-colors hover:bg-white/5"
               style={{ color: '#fb923c' }}>
@@ -135,7 +135,7 @@ export default function Sidebar({ user, isPremium }: { user: User; isPremium: bo
                 <span className="sidebar-badge-free">FREE</span>
                 <p className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>Free Plan</p>
               </div>
-              <a href="mailto:support@retias.app?subject=Premium%20Upgrade"
+              <a href="/pricing"
                 className="block w-full text-center text-xs font-semibold py-1.5 rounded-lg transition-opacity hover:opacity-80"
                 style={{ background: 'linear-gradient(135deg,#fb923c,#f97316)', color: '#fff' }}>
                 Upgrade to Premium

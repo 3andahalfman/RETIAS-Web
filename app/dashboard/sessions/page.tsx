@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient, type PastSession } from '@/lib/supabase'
 import SessionRow from '@/components/SessionRow'
 
-const TABS = ['All', 'Interview', 'Mock', 'Online Test'] as const
+const TABS = ['All', 'Interview', 'Mock', 'Online Assessment'] as const
 type Tab = typeof TABS[number]
 
 function matchesTab(s: PastSession, tab: Tab) {
@@ -12,7 +12,7 @@ function matchesTab(s: PastSession, tab: Tab) {
   const t = (s.session_type ?? '').toLowerCase()
   if (tab === 'Interview')   return t === 'interview'
   if (tab === 'Mock')        return t === 'mock'
-  if (tab === 'Online Test') return t === 'online_test' || t === 'online test'
+  if (tab === 'Online Assessment') return t === 'online_test' || t === 'online test'
   return false
 }
 

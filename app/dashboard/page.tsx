@@ -12,13 +12,6 @@ interface Stats {
   cvsSaved: number
 }
 
-function getGreeting() {
-  const h = new Date().getHours()
-  if (h < 12) return 'Good morning'
-  if (h < 17) return 'Good afternoon'
-  return 'Good evening'
-}
-
 export default function DashboardPage() {
   const [stats, setStats]   = useState<Stats | null>(null)
   const [recent, setRecent] = useState<PastSession[]>([])
@@ -67,7 +60,7 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold" style={{ color: 'var(--text-1)' }}>
-          {getGreeting()}, {firstName} 👋
+          Welcome, {firstName} 👋
         </h1>
         <p className="text-sm mt-1" style={{ color: 'var(--text-2)' }}>
           Ready for your next interview? Let's get started.
@@ -149,7 +142,7 @@ const SESSION_TYPES = [
     cta: 'Start Mock',
   },
   {
-    title: 'Online Test',
+    title: 'Online Assessment',
     desc: 'Solve coding challenges and assessments with real-time AI help.',
     icon: '💻',
     bg: 'rgba(251,146,60,0.15)',
