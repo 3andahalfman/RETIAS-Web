@@ -1,8 +1,23 @@
 'use client'
 
 import Link from 'next/link'
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase'
 
 export default function LandingPage() {
+  const router = useRouter()
+
+  // Logged-in users skip the marketing page. getSession() reads the local
+  // session (no network round-trip), so this stays fast and lets the page
+  // remain statically cached at the edge.
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) router.replace('/dashboard')
+    })
+  }, [router])
+
   return (
     <div style={{ background: '#09090f', color: 'rgba(255,255,255,0.92)', fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif", minHeight: '100vh' }}>
       <style>{`
