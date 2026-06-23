@@ -123,6 +123,28 @@ function FeatureRow({ label, accent, gold }: { label: string; accent?: boolean; 
   )
 }
 
-const FREE_FEATURES = ['5 sessions per month', 'Real-time transcription', 'Mock Interview mode', 'Session history', 'CV Manager (3 CVs)']
-const PRO_FEATURES  = ['Unlimited sessions', 'AI Screen Analysis', 'Manual prompt bar', 'Online Assessment & Onboarding', 'Resume Optimizer', 'Priority support']
-const PRO_PLUS_FEATURES = ['Everything in Premium', 'Top-tier AI (Claude Opus & GPT-5)', 'Custom branded reports & exports', 'Early access to new features', 'Dedicated support channel']
+const FREE_FEATURES = [
+  '10-minute interview sessions',
+  'Real-time transcription',
+  'Mock Interview mode',
+  'Session history',
+  'CV Manager (3 CVs)',
+]
+const PRO_FEATURES = [
+  'Unlimited sessions',
+  'AI Screen Analysis',
+  'Manual prompt bar',
+  'Online Assessment & Onboarding',
+  'Dual-monitor screen capture',
+  'Resume Optimizer',
+  'Pick your AI model',
+  'Priority support',
+]
+const PRO_PLUS_FEATURES = [
+  'Everything in Premium',
+  'Solved Assessment library',
+  'Humanized AI answers (unique per user)',
+  'Top-tier AI (Claude Opus 4.5)',
+  'Early access to new features',
+  'Dedicated support channel',
+]
