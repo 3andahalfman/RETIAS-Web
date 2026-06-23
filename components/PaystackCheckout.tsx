@@ -6,6 +6,8 @@ import { createClient } from '@/lib/supabase'
 
 interface Props {
   planCode: string
+  // Display name shown in the success dialog (e.g. "Premium", "Premium Plus").
+  planName?: string
   // When true, an existing active subscription is cancelled first (a plan switch),
   // instead of blocking. Prevents double billing on upgrade/downgrade.
   replaceActive?: boolean
@@ -55,10 +57,11 @@ function loadPaystackScript(): Promise<void> {
   })
 }
 
-export default function PaystackCheckout({ planCode, replaceActive, className, style, children }: Props) {
+export default function PaystackCheckout({ planCode, planName, replaceActive, className, style, children }: Props) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [successPlan, setSuccessPlan] = useState<string | null>(null)
 
   useEffect(() => { loadPaystackScript().catch(() => {}) }, [])
 
@@ -171,7 +174,7 @@ export default function PaystackCheckout({ planCode, replaceActive, className, s
 
       // Refresh so the new JWT carries app_metadata.is_premium = true
       await supabase.auth.refreshSession().catch(() => {})
-      router.push('/dashboard?upgraded=1')
+      setSuccessPlan(planName || 'Premium')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not activate premium')
     } finally {
@@ -186,6 +189,25 @@ export default function PaystackCheckout({ planCode, replaceActive, className, s
       </button>
       {error && (
         <p style={{ color: '#f87171', fontSize: 12, marginTop: 8, textAlign: 'center' }}>{error}</p>
+      )}
+
+      {successPlan && (
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 1100, background: 'rgba(5,5,10,0.65)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif" }}
+        >
+          <div style={{ width: '100%', maxWidth: 380, background: '#0d0d14', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 18, padding: '34px 28px', textAlign: 'center', boxShadow: '0 24px 80px rgba(0,0,0,0.6)' }}>
+            <div style={{ width: 60, height: 60, borderRadius: '50%', background: 'rgba(52,211,153,0.15)', border: '1px solid rgba(52,211,153,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px', color: '#34d399', fontSize: 30, fontWeight: 700 }}>✓</div>
+            <h3 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 8px', color: 'rgba(255,255,255,0.95)' }}>Payment successful</h3>
+            <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', margin: '0 0 24px', lineHeight: 1.5 }}>
+              {replaceActive ? `You've been upgraded to ` : `You're now on `}
+              <strong style={{ color: 'rgba(255,255,255,0.9)' }}>{successPlan}</strong>. Enjoy your new features! 🎉
+            </p>
+            <button type="button" onClick={() => { window.location.href = '/dashboard' }}
+              style={{ width: '100%', padding: '12px', border: 'none', borderRadius: 10, background: 'linear-gradient(135deg,#3b82f6,#2563eb)', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
+              Continue
+            </button>
+          </div>
+        </div>
       )}
     </>
   )

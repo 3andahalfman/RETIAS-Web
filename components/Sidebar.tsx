@@ -1,9 +1,10 @@
 'use client'
 
 import { usePathname, useRouter } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase'
+import PricingModal from '@/components/PricingModal'
 
 const ADMIN_EMAIL = 'admin@retias.com'
 
@@ -12,7 +13,6 @@ const NAV = [
   { href: '/dashboard/sessions',          icon: '🎙️', label: 'Sessions' },
   { href: '/dashboard/cvs',              icon: '📄',  label: 'CV Manager' },
   { href: '/dashboard/resume-optimizer', icon: '✨',  label: 'Resume Optimizer' },
-  { href: '/dashboard/settings',         icon: '⚙️',  label: 'Settings' },
 ]
 
 const ADMIN_NAV = [
@@ -30,6 +30,20 @@ export default function Sidebar({ user, isPremium }: { user: User; isPremium: bo
   useEffect(() => {
     localStorage.setItem('sidebar-collapsed', String(collapsed))
   }, [collapsed])
+
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [pricingOpen, setPricingOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!menuOpen) return
+    const onClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false)
+    }
+    document.addEventListener('mousedown', onClick)
+    return () => document.removeEventListener('mousedown', onClick)
+  }, [menuOpen])
+
+  const isPlus = user.app_metadata?.is_premium_plus === true
 
   async function handleLogout() {
     const supabase = createClient()
@@ -119,64 +133,64 @@ export default function Sidebar({ user, isPremium }: { user: User; isPremium: bo
         </a>
       </div>
 
-      {/* Upgrade to Premium */}
-      {!isPremium && (
-        <div className="px-2 pb-2">
-          {collapsed ? (
-            <a href="/pricing"
-              title="Upgrade to Premium"
-              className="flex justify-center items-center py-2 rounded-xl transition-colors hover:bg-white/5"
-              style={{ color: '#fb923c' }}>
-              <span style={{ fontSize: 15 }}>⭐</span>
-            </a>
-          ) : (
-            <div className="rounded-xl p-3" style={{ background: 'rgba(251,146,60,0.08)', border: '1px solid rgba(251,146,60,0.2)' }}>
-              <div className="flex items-center gap-1.5 mb-1.5">
-                <span className="sidebar-badge-free">FREE</span>
-                <p className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>Free Plan</p>
-              </div>
-              <a href="/pricing"
-                className="block w-full text-center text-xs font-semibold py-1.5 rounded-lg transition-opacity hover:opacity-80"
-                style={{ background: 'linear-gradient(135deg,#fb923c,#f97316)', color: '#fff' }}>
-                Upgrade to Premium
-              </a>
-            </div>
-          )}
-        </div>
-      )}
+      {/* User + account menu */}
+      <div ref={menuRef} className="px-2 pb-3 pt-2 relative" style={{ borderTop: '1px solid var(--border)' }}>
 
-      {/* User */}
-      <div className="px-2 pb-3 pt-2 group" style={{ borderTop: '1px solid var(--border)' }}>
-        {collapsed ? (
-          <div className="flex justify-center py-1" title={displayName}>
-            <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
-              style={{ background: 'linear-gradient(135deg,#3b82f6,#fb923c)', color: '#fff' }}>
-              {initials}
-            </div>
-          </div>
-        ) : (
-          <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
-            style={{ background: 'var(--surface)' }}>
-            <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
-              style={{ background: 'linear-gradient(135deg,#3b82f6,#fb923c)', color: '#fff' }}>
-              {initials}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1.5">
-                <p className="text-xs font-medium truncate" style={{ color: 'var(--text-1)' }}>{displayName}</p>
-                {isPremium
-                  ? <span className="sidebar-badge-pro">PRO</span>
-                  : <span className="sidebar-badge-free">FREE</span>}
-              </div>
+        {/* Dropdown (opens upward) */}
+        {menuOpen && (
+          <div className="absolute bottom-full mb-2 rounded-xl overflow-hidden"
+            style={{ left: 8, width: 216, background: '#14141c', border: '1px solid var(--border)', boxShadow: '0 12px 32px rgba(0,0,0,0.55)' }}>
+            <div className="px-3 py-3" style={{ borderBottom: '1px solid var(--border)' }}>
+              <p className="text-xs font-semibold truncate" style={{ color: 'var(--text-1)' }}>{displayName}</p>
               <p className="text-[10px] truncate" style={{ color: 'var(--text-3)' }}>{user.email}</p>
             </div>
+            <button type="button" onClick={() => { setMenuOpen(false); setPricingOpen(true) }}
+              className="block w-full m-2 text-center text-xs font-semibold py-2 rounded-lg transition-opacity hover:opacity-80"
+              style={isPremium
+                ? { background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)', color: '#60a5fa', cursor: 'pointer', width: 'calc(100% - 16px)' }
+                : { background: 'linear-gradient(135deg,#fb923c,#f97316)', color: '#fff', cursor: 'pointer', border: 'none', width: 'calc(100% - 16px)' }}>
+              {isPremium ? 'Manage plan' : '✦ Upgrade to Premium'}
+            </button>
+            <a href="/dashboard/settings" onClick={() => setMenuOpen(false)}
+              className="flex items-center gap-2.5 px-3 py-2 text-xs transition-colors hover:bg-white/5"
+              style={{ color: 'var(--text-2)', textDecoration: 'none' }}>
+              <span style={{ fontSize: 14 }}>⚙️</span> Settings
+            </a>
             <button type="button" onClick={handleLogout}
-              className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 text-[10px] px-2 py-1 rounded-lg sidebar-signout-btn">
-              Sign out
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left transition-colors hover:bg-white/5"
+              style={{ color: 'var(--text-2)', borderTop: '1px solid var(--border)' }}>
+              <span style={{ fontSize: 14 }}>⎋</span> Log Out
             </button>
           </div>
         )}
+
+        {/* Profile button (toggles dropdown) */}
+        <button type="button" onClick={() => setMenuOpen(o => !o)}
+          title={collapsed ? displayName : undefined}
+          className={`w-full flex items-center rounded-xl transition-colors hover:bg-white/5 ${collapsed ? 'justify-center py-1' : 'gap-3 px-3 py-2.5'}`}
+          style={{ background: collapsed ? 'transparent' : 'var(--surface)', border: 'none', cursor: 'pointer' }}>
+          <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+            style={{ background: 'linear-gradient(135deg,#3b82f6,#fb923c)', color: '#fff' }}>
+            {initials}
+          </div>
+          {!collapsed && (
+            <>
+              <div className="flex-1 min-w-0 text-left">
+                <div className="flex items-center gap-1.5">
+                  <p className="text-xs font-medium truncate" style={{ color: 'var(--text-1)' }}>{displayName}</p>
+                  {isPremium
+                    ? <span className="sidebar-badge-pro">{isPlus ? 'PREMIUM+' : 'PREMIUM'}</span>
+                    : <span className="sidebar-badge-free">FREE</span>}
+                </div>
+                <p className="text-[10px] truncate" style={{ color: 'var(--text-3)' }}>{user.email}</p>
+              </div>
+              <span className="shrink-0" style={{ color: 'var(--text-3)', fontSize: 16, lineHeight: 1 }}>⋯</span>
+            </>
+          )}
+        </button>
       </div>
+
+      <PricingModal open={pricingOpen} onClose={() => setPricingOpen(false)} />
     </aside>
   )
 }
