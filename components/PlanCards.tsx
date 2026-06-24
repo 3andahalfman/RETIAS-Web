@@ -9,6 +9,11 @@ import PaystackCheckout from '@/components/PaystackCheckout'
 const PLAN_PRO = process.env.NEXT_PUBLIC_PAYSTACK_PLAN_PRO as string
 const PLAN_PLUS = process.env.NEXT_PUBLIC_PAYSTACK_PLAN_PLUS as string
 
+// Display prices in USD; Paystack plans bill the NGN equivalent at checkout.
+const PRICE_FREE = '$0'
+const PRICE_PRO = '$10'
+const PRICE_PLUS = '$25'
+
 interface Sub { status: string; tier: string | null; current_period_end: string | null }
 
 // The three plan cards + checkout/guard logic. Reused by /pricing and the modal.
@@ -65,7 +70,7 @@ export default function PlanCards() {
         {/* Free */}
         <div style={cardStyle('rgba(255,255,255,0.04)', 'rgba(255,255,255,0.08)')}>
           <p style={tierLabel('rgba(255,255,255,0.4)')}>Free</p>
-          <p style={priceStyle}>₦0</p>
+          <p style={priceStyle}>{PRICE_FREE}</p>
           <p style={periodStyle}>Forever free</p>
           <div style={{ flex: 1 }}>{FREE_FEATURES.map(f => <FeatureRow key={f} label={f} />)}</div>
           <div style={{ marginTop: 20 }}>
@@ -79,7 +84,7 @@ export default function PlanCards() {
         <div style={{ ...cardStyle('linear-gradient(145deg, rgba(59,130,246,0.12), rgba(139,92,246,0.08))', 'rgba(59,130,246,0.3)'), position: 'relative' }}>
           <div style={{ position: 'absolute', top: -1, right: 20, background: 'linear-gradient(135deg,#3b82f6,#60a5fa)', borderRadius: '0 0 8px 8px', padding: '4px 12px', fontSize: 11, fontWeight: 700, color: '#fff' }}>POPULAR</div>
           <p style={tierLabel('#60a5fa')}>Premium</p>
-          <p style={priceStyle}>₦10,000<span style={perMo}> /mo</span></p>
+          <p style={priceStyle}>{PRICE_PRO}<span style={perMo}> /mo</span></p>
           <div style={{ flex: 1, marginTop: 12 }}>{PRO_FEATURES.map(f => <FeatureRow key={f} label={f} accent />)}</div>
           <div style={{ marginTop: 20 }}>{renderCta('pro', PLAN_PRO, 'linear-gradient(135deg,#3b82f6,#2563eb)', 'Upgrade to Premium')}</div>
         </div>
@@ -87,13 +92,13 @@ export default function PlanCards() {
         {/* Pro Plus */}
         <div style={cardStyle('linear-gradient(145deg, rgba(245,158,11,0.10), rgba(251,146,60,0.06))', 'rgba(245,158,11,0.3)')}>
           <p style={tierLabel('#fbbf24')}>Premium Plus</p>
-          <p style={priceStyle}>₦25,000<span style={perMo}> /mo</span></p>
+          <p style={priceStyle}>{PRICE_PLUS}<span style={perMo}> /mo</span></p>
           <div style={{ flex: 1, marginTop: 12 }}>{PRO_PLUS_FEATURES.map(f => <FeatureRow key={f} label={f} gold />)}</div>
           <div style={{ marginTop: 20 }}>{renderCta('plus', PLAN_PLUS, 'linear-gradient(135deg,#f59e0b,#d97706)', 'Upgrade to Premium Plus')}</div>
         </div>
       </div>
       <p style={{ textAlign: 'center', marginTop: 24, fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>
-        Secure payments by Paystack · Cancel anytime
+        Prices shown in USD · Charged in NGN at checkout via Paystack · Cancel anytime
       </p>
     </>
   )
