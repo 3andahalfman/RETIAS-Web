@@ -17,6 +17,7 @@ const NAV = [
 
 const ADMIN_NAV = [
   { href: '/dashboard/screenshots', icon: '📸', label: 'Screenshot Library' },
+  { href: '/dashboard/billing', icon: '💳', label: 'Billing' },
 ]
 
 export default function Sidebar({ user, isPremium }: { user: User; isPremium: boolean }) {
