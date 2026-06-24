@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
+import PasswordEyeButton from '@/components/PasswordEyeButton'
+import { getStrengthRules, validatePassword } from '@/lib/auth-password'
 
 type Mode = 'signin' | 'signup'
 
@@ -26,22 +28,6 @@ function friendlyError(err: any): string {
   if (msg.includes('network') || msg.includes('fetch'))
     return 'Network error. Check your connection.'
   return err?.message ?? 'Something went wrong.'
-}
-
-function validatePassword(pw: string): string | null {
-  if (pw.length < 8)       return 'Password must be at least 8 characters.'
-  if (!/[A-Z]/.test(pw))   return 'Password must contain at least one uppercase letter.'
-  if (!/[0-9]/.test(pw))   return 'Password must contain at least one number.'
-  return null
-}
-
-interface StrengthRule { label: string; pass: boolean }
-function getStrengthRules(pw: string): StrengthRule[] {
-  return [
-    { label: 'At least 8 characters',     pass: pw.length >= 8 },
-    { label: 'One uppercase letter (A–Z)', pass: /[A-Z]/.test(pw) },
-    { label: 'One number (0–9)',           pass: /[0-9]/.test(pw) },
-  ]
 }
 
 interface Props {
@@ -70,6 +56,13 @@ export default function AuthPage({ initialMode = 'signin' }: Props) {
   useEffect(() => {
     setMode(initialMode)
   }, [initialMode])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const err = new URLSearchParams(window.location.search).get('error')
+    if (err === 'reset_expired') setError('Your reset link expired or is invalid. Request a new one.')
+    else if (err === 'auth_failed') setError('Sign-in failed. Please try again.')
+  }, [])
 
   const strengthRules = getStrengthRules(password)
   const allRulesPass  = strengthRules.every(r => r.pass)
@@ -218,6 +211,14 @@ export default function AuthPage({ initialMode = 'signin' }: Props) {
             <input className="input" type="email" placeholder="Email address"
               value={email} onChange={e => setEmail(e.target.value)} required />
 
+            {mode === 'signin' && (
+              <p className="text-xs text-right -mt-1">
+                <Link href="/forgot-password" style={{ color: 'var(--blue)', fontWeight: 600 }}>
+                  Forgot password?
+                </Link>
+              </p>
+            )}
+
             <div>
               <div style={{ position: 'relative' }}>
                 <input className="input" type={showPw ? 'text' : 'password'} placeholder="Password"
@@ -227,7 +228,7 @@ export default function AuthPage({ initialMode = 'signin' }: Props) {
                   onFocus={() => setPwFocused(true)}
                   onBlur={() => setPwFocused(false)}
                   required />
-                <EyeButton shown={showPw} onClick={() => setShowPw(s => !s)} />
+                <PasswordEyeButton shown={showPw} onClick={() => setShowPw(s => !s)} />
               </div>
 
               {mode === 'signup' && (pwFocused || password.length > 0) && (
@@ -252,7 +253,7 @@ export default function AuthPage({ initialMode = 'signin' }: Props) {
                   <input className="input" type={showConfirm ? 'text' : 'password'} placeholder="Confirm password"
                     style={{ paddingRight: 42 }}
                     value={confirm} onChange={e => setConfirm(e.target.value)} required />
-                  <EyeButton shown={showConfirm} onClick={() => setShowConfirm(s => !s)} />
+                  <PasswordEyeButton shown={showConfirm} onClick={() => setShowConfirm(s => !s)} />
                 </div>
                 {confirm.length > 0 && (
                   <p className="text-xs mt-1.5 ml-1" style={{ color: passwordsMatch ? '#34d399' : '#f87171' }}>
@@ -300,25 +301,5 @@ export default function AuthPage({ initialMode = 'signin' }: Props) {
         </div>
       </div>
     </div>
-  )
-}
-
-function EyeButton({ shown, onClick }: { shown: boolean; onClick: () => void }) {
-  return (
-    <button type="button" onClick={onClick} tabIndex={-1}
-      aria-label={shown ? 'Hide password' : 'Show password'}
-      style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.5)', padding: 6, display: 'flex', alignItems: 'center' }}>
-      {shown ? (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
-          <line x1="1" y1="1" x2="23" y2="23" />
-        </svg>
-      ) : (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-          <circle cx="12" cy="12" r="3" />
-        </svg>
-      )}
-    </button>
   )
 }
