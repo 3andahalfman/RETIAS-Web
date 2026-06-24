@@ -6,6 +6,12 @@ import { createClient } from '@/lib/supabase'
 const ADMIN_EMAIL = 'admin@retias.com'
 const STORAGE_BUCKET = 'online-test-screenshots'
 
+declare global {
+  interface Window {
+    electronAPI?: Record<string, unknown>
+  }
+}
+
 interface OnlineTestCapture {
   id: string
   user_id: string
@@ -66,6 +72,15 @@ export default function ScreenshotLibraryPage() {
   const [forbidden, setForbidden] = useState(false)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set())
+  const [sendModalCap, setSendModalCap] = useState<OnlineTestCapture | null>(null)
+  const [sendPlatform, setSendPlatform] = useState('')
+  const [sendAssessment, setSendAssessment] = useState('')
+  const [sendQuestionsText, setSendQuestionsText] = useState('')
+  const [sendAnswerText, setSendAnswerText] = useState('')
+  const [sending, setSending] = useState(false)
+  const [sendError, setSendError] = useState<string | null>(null)
+  const [sendSuccess, setSendSuccess] = useState<string | null>(null)
+  const [sendParaphraseEnabled, setSendParaphraseEnabled] = useState(false)
 
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -144,6 +159,69 @@ export default function ScreenshotLibraryPage() {
       setDeletingIds(prev => { const n = new Set(prev); ids.forEach(i => n.delete(i)); return n })
     }
   }, [selectedId])
+
+  const openSendModal = useCallback((cap: OnlineTestCapture) => {
+    setSendModalCap(cap)
+    setSendPlatform(cap.detected_platform ?? '')
+    setSendAssessment(cap.detected_test_type ?? '')
+    setSendQuestionsText(cap.extracted_questions ?? '')
+    setSendAnswerText(cap.ai_answer ?? '')
+    setSendParaphraseEnabled(false)
+    setSendError(null)
+    setSendSuccess(null)
+  }, [])
+
+  const closeSendModal = useCallback(() => {
+    setSendModalCap(null)
+    setSending(false)
+    setSendError(null)
+    setSendSuccess(null)
+  }, [])
+
+  const handleSendToSolved = useCallback(async () => {
+    if (!sendModalCap) return
+    setSending(true)
+    setSendError(null)
+    setSendSuccess(null)
+    try {
+      const platform = sendPlatform.trim()
+      const assessment = sendAssessment.trim()
+      const answer = sendAnswerText.trim()
+      if (!platform || !assessment) throw new Error('Platform and assessment type are required.')
+      if (!answer) throw new Error('Answer cannot be empty.')
+
+      const questions = sendQuestionsText
+        .split(/\n\s*\n+/)
+        .map((q) => q.trim())
+        .filter(Boolean)
+      if (!questions.length) {
+        throw new Error('No questions to send. Add at least one question (separate multiple with a blank line).')
+      }
+
+      const supabase = createClient()
+      const rows = questions.map((q) => ({
+        platform,
+        assessment_type: assessment,
+        question: q,
+        answer,
+        answer_variants: [] as string[],
+        paraphrase_enabled: sendParaphraseEnabled,
+        source_capture_id: sendModalCap.id,
+        source_url: sendModalCap.source_url,
+      }))
+
+      const { error } = await supabase.from('solved_questions').insert(rows)
+      if (error) throw new Error(error.message)
+      setSendSuccess(
+        `Added ${rows.length} question${rows.length === 1 ? '' : 's'} to the Solved Assessment bank` +
+        (sendParaphraseEnabled ? ' (users can highlight to paraphrase/humanize).' : '.'),
+      )
+    } catch (err) {
+      setSendError(err instanceof Error ? err.message : 'Failed to send to Solved Assessment bank.')
+    } finally {
+      setSending(false)
+    }
+  }, [sendModalCap, sendPlatform, sendAssessment, sendQuestionsText, sendAnswerText, sendParaphraseEnabled])
 
   const selected = captures.find((c) => c.id === selectedId) ?? null
 
@@ -277,6 +355,15 @@ export default function ScreenshotLibraryPage() {
                         </div>
                         <span
                           role="button"
+                          onClick={(e) => { e.stopPropagation(); openSendModal(cap) }}
+                          className="text-base p-1 rounded-md hover:bg-blue-500/10 shrink-0 cursor-pointer select-none"
+                          style={{ color: '#60a5fa' }}
+                          title="Send to Solved Assessment bank"
+                        >
+                          📤
+                        </span>
+                        <span
+                          role="button"
                           onClick={(e) => { e.stopPropagation(); handleDeleteCapture(cap) }}
                           className="text-base p-1 rounded-md hover:bg-red-500/10 shrink-0 cursor-pointer select-none"
                           style={{
@@ -341,13 +428,145 @@ export default function ScreenshotLibraryPage() {
             )}
 
             <p className="text-xs font-semibold mb-2" style={{ color: 'var(--text-2)' }}>AI Answer</p>
-            <pre className="text-xs leading-relaxed p-3 rounded-lg overflow-auto max-h-80"
+            <pre className="text-xs leading-relaxed p-3 rounded-lg overflow-auto max-h-80 mb-4"
               style={{ background: 'rgba(0,0,0,0.3)', color: 'var(--text-2)', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
               {selected.ai_answer}
             </pre>
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => openSendModal(selected)}
+                className="text-xs font-semibold px-3 py-2 rounded-lg transition-opacity hover:opacity-80"
+                style={{ background: 'linear-gradient(135deg,#3b82f6,#2563eb)', color: '#fff' }}
+              >
+                📤 Send to Solved Assessment bank
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDeleteCapture(selected)}
+                className="text-xs font-semibold px-3 py-2 rounded-lg transition-opacity hover:opacity-80"
+                style={{ background: 'var(--surface)', color: '#f87171', border: '1px solid var(--border)' }}
+              >
+                🗑 Delete capture
+              </button>
+            </div>
           </div>
         )}
       </div>
+
+      {sendModalCap && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: 'rgba(0,0,0,0.65)' }}
+          onClick={closeSendModal}
+        >
+          <div
+            className="w-full max-w-lg rounded-xl p-5 max-h-[90vh] overflow-y-auto"
+            style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-bold" style={{ color: 'var(--text-1)' }}>
+                Send to Solved Assessment bank
+              </h2>
+              <button type="button" onClick={closeSendModal} className="text-lg leading-none" style={{ color: 'var(--text-3)' }}>
+                ✕
+              </button>
+            </div>
+            <p className="text-xs mb-4" style={{ color: 'var(--text-3)' }}>
+              Each blank-line-separated question becomes its own row. The same answer is attached to all of them.
+            </p>
+
+            <label className="block text-xs font-semibold mb-1" style={{ color: 'var(--text-2)' }}>Platform</label>
+            <input
+              type="text"
+              className="w-full rounded-lg px-3 py-2 text-sm mb-3"
+              style={{ background: 'rgba(0,0,0,0.25)', border: '1px solid var(--border)', color: 'var(--text-1)' }}
+              placeholder="e.g. Outlier, HackerRank, Mettl"
+              value={sendPlatform}
+              onChange={(e) => setSendPlatform(e.target.value)}
+            />
+
+            <label className="block text-xs font-semibold mb-1" style={{ color: 'var(--text-2)' }}>Assessment Type</label>
+            <input
+              type="text"
+              className="w-full rounded-lg px-3 py-2 text-sm mb-3"
+              style={{ background: 'rgba(0,0,0,0.25)', border: '1px solid var(--border)', color: 'var(--text-1)' }}
+              placeholder="e.g. Aether Onboarding, Skill: Python"
+              value={sendAssessment}
+              onChange={(e) => setSendAssessment(e.target.value)}
+            />
+
+            <label className="block text-xs font-semibold mb-1" style={{ color: 'var(--text-2)' }}>
+              Questions (blank line between each)
+            </label>
+            <textarea
+              className="w-full rounded-lg px-3 py-2 text-sm mb-3 font-mono"
+              style={{ background: 'rgba(0,0,0,0.25)', border: '1px solid var(--border)', color: 'var(--text-1)' }}
+              rows={6}
+              value={sendQuestionsText}
+              onChange={(e) => setSendQuestionsText(e.target.value)}
+            />
+
+            <label className="block text-xs font-semibold mb-1" style={{ color: 'var(--text-2)' }}>Answer</label>
+            <textarea
+              className="w-full rounded-lg px-3 py-2 text-sm mb-3 font-mono"
+              style={{ background: 'rgba(0,0,0,0.25)', border: '1px solid var(--border)', color: 'var(--text-1)' }}
+              rows={8}
+              value={sendAnswerText}
+              onChange={(e) => setSendAnswerText(e.target.value)}
+            />
+
+            <label className="flex items-start gap-2 text-xs mb-3 cursor-pointer" style={{ color: 'var(--text-2)' }}>
+              <input
+                type="checkbox"
+                className="mt-0.5"
+                checked={sendParaphraseEnabled}
+                onChange={(e) => setSendParaphraseEnabled(e.target.checked)}
+              />
+              <span>
+                Allow users to paraphrase / humanize this answer
+                <span className="block mt-1" style={{ color: 'var(--text-3)' }}>
+                  Premium Plus users highlight text in the desktop app to rewrite via QuillBot.
+                </span>
+              </span>
+            </label>
+
+            {sendError && (
+              <p className="text-xs mb-3 p-2 rounded-lg" style={{ background: 'rgba(248,113,113,0.1)', color: '#f87171' }}>
+                {sendError}
+              </p>
+            )}
+            {sendSuccess && (
+              <p className="text-xs mb-3 p-2 rounded-lg" style={{ background: 'rgba(52,211,153,0.1)', color: '#34d399' }}>
+                {sendSuccess}
+              </p>
+            )}
+
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={closeSendModal}
+                disabled={sending}
+                className="text-xs font-semibold px-4 py-2 rounded-lg disabled:opacity-40"
+                style={{ background: 'var(--surface)', color: 'var(--text-2)', border: '1px solid var(--border)' }}
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={handleSendToSolved}
+                disabled={sending}
+                className="text-xs font-semibold px-4 py-2 rounded-lg disabled:opacity-40"
+                style={{ background: 'linear-gradient(135deg,#3b82f6,#2563eb)', color: '#fff' }}
+              >
+                {sending ? 'Sending…' : 'Send'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

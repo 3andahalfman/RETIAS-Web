@@ -16,6 +16,7 @@ out/
 *.pem
 npm-debug.log*
 *.log
+supabase/.temp/
 
 # TypeScript build info
 *.tsbuildinfo
