@@ -1,12 +1,20 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { authCallbackUrl } from '@/lib/site-url'
 
-// Service-role client — never exposed to the browser
 function adminClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
+    { auth: { autoRefreshToken: false, persistSession: false } },
+  )
+}
+
+function publicAuthClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } },
   )
 }
 
@@ -19,7 +27,6 @@ export async function POST(req: Request) {
 
     const supabase = adminClient()
 
-    // 1. Check display name availability
     const { data: existing } = await supabase
       .from('profiles')
       .select('id')
@@ -29,32 +36,35 @@ export async function POST(req: Request) {
     if (existing)
       return NextResponse.json({ error: 'That display name is already taken. Please choose another.' }, { status: 409 })
 
-    // 2. Create the auth user
-    const { data: authData, error: authErr } = await supabase.auth.admin.createUser({
+    // signUp sends the confirmation email when mailer_autoconfirm is off in Supabase
+    const { data: signUpData, error: signUpErr } = await publicAuthClient().auth.signUp({
       email: email.trim(),
       password,
-      user_metadata: { display_name: displayName.trim() },
-      email_confirm: true,
+      options: {
+        data: { display_name: displayName.trim() },
+        emailRedirectTo: authCallbackUrl(req),
+      },
     })
 
-    if (authErr || !authData.user)
-      return NextResponse.json({ error: authErr?.message ?? 'Failed to create account.' }, { status: 400 })
+    if (signUpErr)
+      return NextResponse.json({ error: signUpErr.message ?? 'Failed to create account.' }, { status: 400 })
 
-    // 3. Insert profile (atomic — if this fails the name wasn't reserved)
+    if (!signUpData.user)
+      return NextResponse.json({ error: 'Failed to create account.' }, { status: 400 })
+
     const { error: profileErr } = await supabase
       .from('profiles')
-      .insert({ id: authData.user.id, display_name: displayName.trim() })
+      .insert({ id: signUpData.user.id, display_name: displayName.trim() })
 
     if (profileErr) {
-      // Clean up the auth user so they can retry
-      await supabase.auth.admin.deleteUser(authData.user.id)
-      if (profileErr.code === '23505') // unique_violation
+      await supabase.auth.admin.deleteUser(signUpData.user.id)
+      if (profileErr.code === '23505')
         return NextResponse.json({ error: 'That display name was just taken. Please choose another.' }, { status: 409 })
       return NextResponse.json({ error: 'Failed to create profile. Please try again.' }, { status: 500 })
     }
 
-    return NextResponse.json({ success: true })
-  } catch (err: any) {
+    return NextResponse.json({ success: true, needsEmailConfirmation: true })
+  } catch (err: unknown) {
     console.error('[register]', err)
     return NextResponse.json({ error: 'Something went wrong. Please try again.' }, { status: 500 })
   }

@@ -15,7 +15,8 @@ export function getStrengthRules(pw: string): StrengthRule[] {
   ]
 }
 
+import { authCallbackUrl } from '@/lib/site-url'
+
 export function passwordResetRedirectUrl(): string {
-  if (typeof window === 'undefined') return '/auth/callback?next=/reset-password'
-  return `${window.location.origin}/auth/callback?next=${encodeURIComponent('/reset-password')}`
+  return authCallbackUrl(undefined, '/reset-password')
 }

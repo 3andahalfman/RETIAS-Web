@@ -25,6 +25,8 @@ function friendlyError(err: any): string {
     return 'No account found with this email.'
   if (msg.includes('rate limit') || msg.includes('too many'))
     return 'Too many attempts. Please wait and try again.'
+  if (msg.includes('email not confirmed') || msg.includes('not confirmed'))
+    return 'Please confirm your email before signing in. Check your inbox for the confirmation link.'
   if (msg.includes('network') || msg.includes('fetch'))
     return 'Network error. Check your connection.'
   return err?.message ?? 'Something went wrong.'
@@ -49,6 +51,7 @@ export default function AuthPage({ initialMode = 'signin' }: Props) {
   const [pwFocused, setPwFocused] = useState(false)
   const [showPw, setShowPw]       = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
+  const [signupEmailSent, setSignupEmailSent] = useState(false)
 
   const [nameStatus, setNameStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle')
   const nameDebounce = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -93,6 +96,7 @@ export default function AuthPage({ initialMode = 'signin' }: Props) {
     setConfirm('')
     setName('')
     setNameStatus('idle')
+    setSignupEmailSent(false)
 
     const qs = typeof window !== 'undefined' ? window.location.search : ''
     if (m === 'signup' && pathname !== '/signup') {
@@ -130,14 +134,8 @@ export default function AuthPage({ initialMode = 'signin' }: Props) {
         const data = await res.json()
         if (!res.ok) { setError(data.error ?? 'Registration failed.'); return }
 
-        const { error: signInErr } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
-        if (signInErr) {
-          setError('Account created! Please sign in.')
-          switchMode('signin')
-          return
-        }
-        router.push(getNextPath())
-        router.refresh()
+        setSignupEmailSent(true)
+        setError('')
       }
     } catch (err) {
       setError(friendlyError(err))
@@ -190,6 +188,19 @@ export default function AuthPage({ initialMode = 'signin' }: Props) {
           </div>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+            {signupEmailSent ? (
+              <div className="text-center py-2">
+                <p className="text-sm mb-3" style={{ color: 'var(--text-2)', lineHeight: 1.6 }}>
+                  We sent a confirmation link to{' '}
+                  <strong style={{ color: 'var(--text-1)' }}>{email.trim()}</strong>.
+                  Click it to activate your account, then sign in.
+                </p>
+                <button type="button" className="btn-primary" onClick={() => switchMode('signin')}>
+                  Back to sign in
+                </button>
+              </div>
+            ) : (
+              <>
             {mode === 'signup' && (
               <div>
                 <input className="input" placeholder="Display name"
@@ -273,8 +284,12 @@ export default function AuthPage({ initialMode = 'signin' }: Props) {
             <button type="submit" className="btn-primary mt-1" disabled={!canSubmit}>
               {loading ? 'Please wait…' : mode === 'signin' ? 'Sign In' : 'Create Account'}
             </button>
+              </>
+            )}
           </form>
 
+          {!signupEmailSent && (
+          <>
           <div className="flex items-center gap-3 my-4">
             <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
             <span className="text-xs" style={{ color: 'var(--text-3)' }}>or</span>
@@ -290,6 +305,8 @@ export default function AuthPage({ initialMode = 'signin' }: Props) {
             </svg>
             Continue with Google
           </button>
+          </>
+          )}
 
           <p className="text-xs text-center mt-5" style={{ color: 'var(--text-3)' }}>
             {mode === 'signup' ? (
