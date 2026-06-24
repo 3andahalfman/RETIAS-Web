@@ -30,8 +30,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // Redirect authenticated users away from login
-  if (user && path === '/login') {
+  // Redirect authenticated users away from auth pages
+  if (user && (path === '/login' || path === '/signup')) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
@@ -42,5 +42,5 @@ export const config = {
   // '/' is intentionally excluded so the marketing landing page stays
   // statically cached at the edge (huge TTFB win). Logged-in users are
   // redirected to /dashboard client-side from the landing page instead.
-  matcher: ['/login', '/dashboard/:path*'],
+  matcher: ['/login', '/signup', '/dashboard/:path*'],
 }
