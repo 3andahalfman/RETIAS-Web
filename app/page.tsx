@@ -179,7 +179,7 @@ export default function LandingPage() {
             <span style={{ fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,0.6)' }}>RETIAS</span>
           </div>
           <div style={{ display: 'flex', gap: 24 }}>
-            {[['mailto:realmsemerald@gmail.com', 'Support'], ['https://github.com/3andahalfman/RETIAS/releases/latest', 'Download'], ['/login', 'Sign in']].map(([href, label]) => (
+            {[['mailto:realmsemerald@gmail.com', 'Support'], ['https://github.com/3andahalfman/RETIAS/releases/latest/download/RETIAS-Setup.exe', 'Download'], ['/login', 'Sign in']].map(([href, label]) => (
               <a key={label} href={href} style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', textDecoration: 'none' }}>{label}</a>
             ))}
           </div>
