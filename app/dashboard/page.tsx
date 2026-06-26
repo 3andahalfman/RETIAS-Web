@@ -143,7 +143,7 @@ const SESSION_TYPES = [
   },
   {
     title: 'Online Assessment',
-    desc: 'Capture screenshots, Analyse All for AI answers, browse Solved Q&A, or Go Live from saved questions.',
+    desc: 'Capture screenshots, Analyse All for AI answers, or browse the Solved Assessment library.',
     icon: '💻',
     bg: 'rgba(251,146,60,0.15)',
     color: '#fb923c',

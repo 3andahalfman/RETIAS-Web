@@ -31,18 +31,18 @@ When you add **any** new user-facing feature (desktop, web, or both):
 | F-002 | Context-aware answers | AI answers use CV, job description, and the question asked | Free | Desktop | ✓ | — | — |
 | F-003 | Stealth overlay | Overlay hidden from screen sharing; dock/expand workflow | Free | Desktop | ✓ | — | — |
 | F-004 | CV Manager | Upload and manage resumes; powers personalised answers | Free (3 CVs) | Desktop + Web | ✓ | ✓ | ✓ (`/dashboard/cvs`) |
-| F-005 | Resume Optimizer | ATS score, keyword gaps, AI-optimised CV vs a job description | Premium | Web + Desktop link | ✓ | ✓ | ✓ |
+| F-005 | Resume Optimizer | ATS score, keyword gaps, AI-optimised CV vs a job description | Premium | Web + Desktop link | — | — | ✓ |
 | F-006 | Session history | Review past sessions, Q&A, transcripts | Free | Desktop + Web | ✓ | ✓ | ✓ (`/dashboard/sessions`) |
 | F-007 | Real Interview mode | Live coaching during a real job interview | Free (10 min cap) | Desktop | session card | — | CTA → download |
 | F-008 | Mock Interview mode | Practice with YouTube mock interview audio | Free | Desktop | session card | ✓ | CTA → download |
 | F-009 | Online Assessment | Screenshot capture + AI analysis for tests/onboarding | Premium | Desktop | ✓ | ✓ | CTA → download |
-| F-010 | Dual-monitor capture | Capture from a chosen display during online tests | Premium | Desktop | ✓ | ✓ | — |
+| F-010 | Dual-monitor capture | Capture from a chosen display during online tests | Premium | Desktop | — | — | — |
 | F-011 | Manual prompt bar | Type a custom prompt mid-session | Premium | Desktop | — | ✓ | — |
 | F-012 | AI model picker | Choose Sonnet vs Opus (Opus gated) | Premium / Plus | Desktop | — | ✓ | — |
 | F-013 | Solved Assessment library | Browse curated Q&A by platform; study or go live | Premium Plus | Desktop | ✓ | ✓ | — |
 | F-014 | Paraphrase / Humanize | Highlight answer text → QuillBot-style rewrite (admin opt-in per question) | Premium Plus | Desktop | ✓ | ✓ | — |
 | F-015 | Auto-Typer | Paste answers into any field at human-like speed | All (usage varies) | Desktop | ✓ | ✓ | — |
-| F-016 | Go Live (Solved Q&A) | Run a live assessment session from a saved solved question | Premium Plus | Desktop | ✓ | ✓ | — |
+| F-016 | Go Live (Solved Q&A) | Run a live assessment session from a saved solved question | Premium Plus | Desktop | — | — | — |
 | F-017 | Screenshot Library (admin) | Review scored captures; send Q&A to Solved bank | Admin | Desktop + Web | — | — | admin (`/dashboard/screenshots`) |
 | F-018 | Admin billing overview | All subscribers, plan, renewal status | Admin | Web | — | — | admin (`/dashboard/billing`) |
 | F-019 | Paystack subscriptions | Upgrade / switch Premium ↔ Premium Plus | — | Web | — | ✓ | modal in sidebar |

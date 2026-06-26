@@ -37,8 +37,8 @@ Convert visitors to paid users. Show the three tiers (Free / Premium / Premium P
 
 - Three tiers: Free, Premium ($10/mo USD display), Premium Plus ($25/mo USD display)
 - Free: Real/Mock interviews (10 min cap on Real), stealth, Auto-Typer, session history, 3 CVs
-- Premium: unlimited sessions, screenshot Analyse All, Online Assessment, dual-monitor, manual prompt, Resume Optimizer, Sonnet model
-- Premium Plus: Solved library, Go Live, Paraphrase & Humanize, Opus 4.5
+- Premium: unlimited sessions, screenshot Analyse All, Online Assessment, manual prompt, Sonnet model
+- Premium Plus: Solved library, Paraphrase & Humanize, Opus 4.5
 - Active-subscription detection: shows "✓ Your current plan" on the matching tier and "Switch to Premium" / "Upgrade to Premium Plus" on the others
 - Logged-out checkout button redirects to `/login?next=/pricing` instead of opening Paystack
 - "POPULAR" ribbon on the Premium card
@@ -46,7 +46,7 @@ Convert visitors to paid users. Show the three tiers (Free / Premium / Premium P
 ## Copy (verbatim, currently live)
 
 > **Page heading:** Simple pricing
-> **Page subhead:** Start free with interviews, stealth mode, and Auto-Typer. Upgrade for screenshot analysis, Online Assessment, and the Solved Q&A library with Go Live and paraphrase tools.
+> **Page subhead:** Start free with interviews, stealth mode, and Auto-Typer. Upgrade for screenshot analysis, Online Assessment, and the Solved Q&A library with paraphrase tools.
 > **Trust line:** Prices shown in USD · Charged in NGN at checkout via Paystack · Cancel anytime
 
 ### Plan content (PlanCards feature arrays, source of truth)
@@ -64,16 +64,13 @@ Convert visitors to paid users. Show the three tiers (Free / Premium / Premium P
 - Unlimited Real & Mock sessions
 - Screenshot capture & Analyse All
 - Online Assessment & Onboarding
-- Dual-monitor screen capture
 - Manual prompt bar
-- Resume Optimizer (web dashboard)
 - Choose your AI model (Sonnet)
 - Priority email support
 
 **Premium Plus — $25 /mo**
 - Everything in Premium
 - Solved Assessment library
-- Go Live from saved Q&A
 - Paraphrase & Humanize answers
 - Claude Opus 4.5 model
 - Early access to new features

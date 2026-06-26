@@ -196,17 +196,14 @@ const FEATURES = [
   { icon: '👁️', title: 'Stealth mode overlay',      bg: 'rgba(251,146,60,0.15)', desc: 'Invisible to screen-sharing software. Dock to a corner and expand when you need help — your interviewer sees nothing.' },
   { icon: '📄', title: 'CV-aware suggestions',       bg: 'rgba(16,185,129,0.15)', desc: 'Upload your resume and RETIAS personalises every answer to match your actual experience and skills.' },
   { icon: '📸', title: 'Screenshot capture & analysis', bg: 'rgba(245,158,11,0.15)', desc: 'During online tests, capture up to five screenshots, then Analyse All for instant AI answers — coding, MCQ, verbal reasoning, and onboarding screens.' },
-  { icon: '🖥️', title: 'Dual-monitor capture',      bg: 'rgba(14,165,233,0.15)', desc: 'Pick the display your assessment runs on so captures stay accurate across dual-monitor setups.' },
   { icon: '📚', title: 'Solved Assessment library', bg: 'rgba(167,139,250,0.15)', desc: 'Browse curated Q&A by platform and assessment type — study offline or jump straight into a coached session.' },
-  { icon: '🔴', title: 'Go Live from saved Q&A',    bg: 'rgba(239,68,68,0.12)',  desc: 'Turn any solved question into a live Online Assessment session with capture tools and real-time AI coaching.' },
   { icon: '✍️', title: 'Paraphrase & Humanize',     bg: 'rgba(236,72,153,0.12)', desc: 'Highlight any answer and rewrite it in your voice — paraphrase for clarity or humanize to sound natural (Premium Plus).' },
   { icon: '⌨️', title: 'Auto-Typer',                bg: 'rgba(74,222,128,0.12)', desc: 'Send any answer to the built-in typer and paste it into forms, IDE fields, or essay boxes at a natural human pace.' },
-  { icon: '✨', title: 'Resume Optimizer',           bg: 'rgba(245,158,11,0.15)', desc: 'Scan your resume against any job description and get an ATS score, keyword gaps, and an AI-optimised version.' },
   { icon: '📊', title: 'Session history & analytics', bg: 'rgba(99,102,241,0.15)',desc: 'Review every session on web and desktop, track progress, and spot patterns across companies and roles.' },
 ]
 
 const SESSION_TYPES = [
   { icon: '🎙️', title: 'Real Interview',   bg: 'rgba(59,130,246,0.15)',  borderColor: 'rgba(59,130,246,0.2)',  color: '#60a5fa', desc: 'Live coaching while the interviewer speaks — transcription, context-aware answers, and a stealth overlay you control.', cta: 'Real Interview' },
   { icon: '🤖', title: 'Mock Interview',   bg: 'rgba(16,185,129,0.15)', borderColor: 'rgba(16,185,129,0.2)', color: '#34d399', desc: 'Practice with YouTube mock interviews. RETIAS listens, detects questions, and coaches you in real time using your CV.', cta: 'Mock Interview' },
-  { icon: '💻', title: 'Online Assessment & Onboarding', bg: 'rgba(251,146,60,0.15)', borderColor: 'rgba(251,146,60,0.2)', color: '#fb923c', desc: 'Capture screenshots, stack frames, Analyse All for scored answers, or browse the Solved library and Go Live when you are ready.', cta: 'Online Assessment & Onboarding' },
+  { icon: '💻', title: 'Online Assessment & Onboarding', bg: 'rgba(251,146,60,0.15)', borderColor: 'rgba(251,146,60,0.2)', color: '#fb923c', desc: 'Capture screenshots, stack frames, and Analyse All for scored answers — or browse the Solved Assessment library to study curated Q&A.', cta: 'Online Assessment & Onboarding' },
 ]

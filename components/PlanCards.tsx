@@ -141,16 +141,13 @@ const PRO_FEATURES = [
   'Unlimited Real & Mock sessions',
   'Screenshot capture & Analyse All',
   'Online Assessment & Onboarding',
-  'Dual-monitor screen capture',
   'Manual prompt bar',
-  'Resume Optimizer (web dashboard)',
   'Choose your AI model (Sonnet)',
   'Priority email support',
 ]
 const PRO_PLUS_FEATURES = [
   'Everything in Premium',
   'Solved Assessment library',
-  'Go Live from saved Q&A',
   'Paraphrase & Humanize answers',
   'Claude Opus 4.5 model',
   'Early access to new features',
