@@ -62,6 +62,7 @@ Convert visitors to paid users. Show the three tiers (Free / Premium / Premium P
 - Session history & web dashboard
 
 **Premium — $10 /mo — POPULAR**
+- Everything in Free
 - Unlimited Real & Mock sessions
 - Screenshot capture & Analyse All
 - Online Assessment & Onboarding

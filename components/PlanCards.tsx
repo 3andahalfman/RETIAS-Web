@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase'
 import PaystackCheckout from '@/components/PaystackCheckout'
-import { PLAN_FEATURES } from '@/lib/plan-features'
+import { ALL_PLAN_INCLUDES, PLAN_FEATURES } from '@/lib/plan-features'
 
 const PLAN_PRO = process.env.NEXT_PUBLIC_PAYSTACK_PLAN_PRO as string
 const PLAN_PLUS = process.env.NEXT_PUBLIC_PAYSTACK_PLAN_PLUS as string
@@ -67,6 +67,14 @@ export default function PlanCards() {
 
   return (
     <>
+      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 8, marginBottom: 28 }}>
+        <span style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.45)', alignSelf: 'center', marginRight: 4 }}>All plans include</span>
+        {ALL_PLAN_INCLUDES.map((f) => (
+          <span key={f} style={{ fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,0.75)', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 99, padding: '5px 12px' }}>
+            {f}
+          </span>
+        ))}
+      </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
         {/* Free */}
         <div style={cardStyle('rgba(255,255,255,0.04)', 'rgba(255,255,255,0.08)')}>
