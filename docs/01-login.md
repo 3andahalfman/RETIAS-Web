@@ -2,8 +2,8 @@
 
 | Attribute | Value |
 |---|---|
-| **Route** | `/login` (supports `?next=/some-path`) |
-| **File** | `app/login/page.tsx` |
+| **Route** | `/login` (supports `?next=/some-path`) · sign-up also at `/signup` |
+| **File** | `app/login/page.tsx` → `components/AuthPage.tsx` |
 | **Auth gate** | Public |
 | **Status** | Live |
 
@@ -81,6 +81,11 @@ Single page handling both sign-in and sign-up via a Tab switcher. Also offers Go
 
 ## Open ideas / not yet built
 
-- "Forgot password" link → magic link / reset
 - Apple / GitHub OAuth
 - Email-verification badge on first sign-in
+
+## Related pages
+
+- [Sign up](./10-signup.md) — `/signup`, same `AuthPage` component
+- [Forgot password](./11-forgot-password.md) — `/forgot-password`
+- [Reset password](./12-reset-password.md) — `/reset-password`

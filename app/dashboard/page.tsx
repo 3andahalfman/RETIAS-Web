@@ -127,7 +127,7 @@ export default function DashboardPage() {
 const SESSION_TYPES = [
   {
     title: 'Real Interview',
-    desc: 'Use AI to analyse your answers in real-time as the interviewer speaks.',
+    desc: 'Live coaching while the interviewer speaks — stealth overlay, transcription, and CV-aware answers.',
     icon: '🎙️',
     bg: 'rgba(59,130,246,0.15)',
     color: '#60a5fa',
@@ -135,7 +135,7 @@ const SESSION_TYPES = [
   },
   {
     title: 'Mock Interview',
-    desc: 'Practice with a simulated interviewer — AI poses questions in real time.',
+    desc: 'Practice with YouTube mock interviews — AI detects questions and coaches you in real time.',
     icon: '🤖',
     bg: 'rgba(16,185,129,0.15)',
     color: '#34d399',
@@ -143,7 +143,7 @@ const SESSION_TYPES = [
   },
   {
     title: 'Online Assessment',
-    desc: 'Solve coding challenges and assessments with real-time AI help.',
+    desc: 'Capture screenshots, Analyse All for AI answers, browse Solved Q&A, or Go Live from saved questions.',
     icon: '💻',
     bg: 'rgba(251,146,60,0.15)',
     color: '#fb923c',

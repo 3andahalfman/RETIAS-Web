@@ -120,7 +120,7 @@ export default function Sidebar({ user, isPremium }: { user: User; isPremium: bo
           <span style={{ fontSize: 15 }}>⬇️</span>
           {!collapsed && <><span className="flex-1">Download Desktop App</span><span style={{ color: 'var(--text-3)' }}>›</span></>}
         </a>
-        <a href="mailto:support@retias.app"
+        <a href="mailto:realmsemerald@gmail.com"
           title={collapsed ? 'Email Support' : undefined}
           className="flex items-center rounded-xl text-xs font-medium transition-all hover:bg-white/5"
           style={{

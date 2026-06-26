@@ -66,12 +66,30 @@ The marketing front door. A first-time visitor should leave knowing what RETIAS 
 |---|---|---|
 | 🎙️ | Real-time transcription | Instantly transforms spoken audio into text as the interviewer speaks, giving you the full context in real time. |
 | 🧠 | Context-aware answers | Tailored answers based on your CV, the job description, and the specific question — not generic responses. |
-| 👁️ | Stealth mode overlay | Invisible to screen-sharing software. Only you can see the overlay — your interviewer sees nothing. |
+| 👁️ | Stealth mode overlay | Invisible to screen-sharing software. Dock to a corner and expand when you need help — your interviewer sees nothing. |
 | 📄 | CV-aware suggestions | Upload your resume and RETIAS personalises every answer to match your actual experience and skills. |
+| 📸 | Screenshot capture & analysis | During online tests, capture up to five screenshots, then Analyse All for instant AI answers — coding, MCQ, verbal reasoning, and onboarding screens. |
+| 🖥️ | Dual-monitor capture | Pick the display your assessment runs on so captures stay accurate across dual-monitor setups. |
+| 📚 | Solved Assessment library | Browse curated Q&A by platform and assessment type — study offline or jump straight into a coached session. |
+| 🔴 | Go Live from saved Q&A | Turn any solved question into a live Online Assessment session with capture tools and real-time AI coaching. |
+| ✍️ | Paraphrase & Humanize | Highlight any answer and rewrite it in your voice — paraphrase for clarity or humanize to sound natural (Premium Plus). |
+| ⌨️ | Auto-Typer | Send any answer to the built-in typer and paste it into forms, IDE fields, or essay boxes at a natural human pace. |
 | ✨ | Resume Optimizer | Scan your resume against any job description and get an ATS score, keyword gaps, and an AI-optimised version. |
-| 📊 | Session history & analytics | Review every session, track your progress, and identify patterns across companies and roles. |
+| 📊 | Session history & analytics | Review every session on web and desktop, track progress, and spot patterns across companies and roles. |
 
-When you add features, also surface them here AND in the pricing doc.
+When you add features, also surface them here AND in the pricing doc. **Register first** in [FEATURE_REGISTRY.md](./FEATURE_REGISTRY.md).
+
+### Session type cards (SESSION_TYPES array)
+
+| Title | Description |
+|---|---|
+| Real Interview | Live coaching while the interviewer speaks — transcription, context-aware answers, and a stealth overlay you control. |
+| Mock Interview | Practice with YouTube mock interviews. RETIAS listens, detects questions, and coaches you in real time using your CV. |
+| Online Assessment & Onboarding | Capture screenshots, stack frames, Analyse All for scored answers, or browse the Solved library and Go Live when you are ready. |
+
+### Website vs product (known gaps)
+
+All major customer-facing features are now on the landing page. **Not marketed:** one-account-per-device (F-023), admin-only tools. See [FEATURE_REGISTRY.md](./FEATURE_REGISTRY.md) for the full map.
 
 ## How to extend
 

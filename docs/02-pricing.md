@@ -35,10 +35,10 @@ Convert visitors to paid users. Show the three tiers (Free / Premium / Premium P
 
 ## Features
 
-- Three tiers: Free, Premium (₦10,000/mo), Premium Plus (₦25,000/mo)
-- Free has the 10-minute interview cap
-- Premium = unlimited sessions + screen analysis + dual-monitor + model picker
-- Premium Plus = everything in Premium + Solved Assessment library + humanized answers + Opus 4.5
+- Three tiers: Free, Premium ($10/mo USD display), Premium Plus ($25/mo USD display)
+- Free: Real/Mock interviews (10 min cap on Real), stealth, Auto-Typer, session history, 3 CVs
+- Premium: unlimited sessions, screenshot Analyse All, Online Assessment, dual-monitor, manual prompt, Resume Optimizer, Sonnet model
+- Premium Plus: Solved library, Go Live, Paraphrase & Humanize, Opus 4.5
 - Active-subscription detection: shows "✓ Your current plan" on the matching tier and "Switch to Premium" / "Upgrade to Premium Plus" on the others
 - Logged-out checkout button redirects to `/login?next=/pricing` instead of opening Paystack
 - "POPULAR" ribbon on the Premium card
@@ -46,33 +46,36 @@ Convert visitors to paid users. Show the three tiers (Free / Premium / Premium P
 ## Copy (verbatim, currently live)
 
 > **Page heading:** Simple pricing
-> **Page subhead:** Start free. Upgrade when you're ready.
-> **Trust line:** Secure payments by Paystack · Cancel anytime
+> **Page subhead:** Start free with interviews, stealth mode, and Auto-Typer. Upgrade for screenshot analysis, Online Assessment, and the Solved Q&A library with Go Live and paraphrase tools.
+> **Trust line:** Prices shown in USD · Charged in NGN at checkout via Paystack · Cancel anytime
 
 ### Plan content (PlanCards feature arrays, source of truth)
 
-**Free — ₦0 — Forever free**
-- 10-minute interview sessions
+**Free — $0 — Forever free**
+- 10-minute Real Interview sessions
 - Real-time transcription
 - Mock Interview mode
-- Session history
+- Stealth mode overlay
+- Auto-Typer
+- Session history & web dashboard
 - CV Manager (3 CVs)
 
-**Premium — ₦10,000 /mo — POPULAR**
-- Unlimited sessions
-- AI Screen Analysis
-- Manual prompt bar
+**Premium — $10 /mo — POPULAR**
+- Unlimited Real & Mock sessions
+- Screenshot capture & Analyse All
 - Online Assessment & Onboarding
 - Dual-monitor screen capture
-- Resume Optimizer
-- Pick your AI model
-- Priority support
+- Manual prompt bar
+- Resume Optimizer (web dashboard)
+- Choose your AI model (Sonnet)
+- Priority email support
 
-**Premium Plus — ₦25,000 /mo**
+**Premium Plus — $25 /mo**
 - Everything in Premium
 - Solved Assessment library
-- Humanized AI answers (unique per user)
-- Top-tier AI (Claude Opus 4.5)
+- Go Live from saved Q&A
+- Paraphrase & Humanize answers
+- Claude Opus 4.5 model
 - Early access to new features
 - Dedicated support channel
 

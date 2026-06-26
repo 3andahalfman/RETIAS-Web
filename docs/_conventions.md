@@ -91,3 +91,13 @@ Dashboard greeting is **"Welcome, {firstName} 👋"** — not time-of-day based.
 ## "Online Test" vs "Online Assessment"
 
 User-facing copy uses **"Online Assessment"**. Internal IDs / DB session_type still use `online-test` / `online_test`. Don't change those — they'd break legacy rows.
+
+## New features → website content
+
+When shipping a user-facing feature (desktop or web):
+
+1. Register it in [FEATURE_REGISTRY.md](./FEATURE_REGISTRY.md) (append checklist + master table + changelog).
+2. Update landing/pricing code if the feature is marketed publicly.
+3. Update the relevant page doc(s).
+
+See **Website content gaps** in the registry for features that exist in the product but are not yet on the marketing site.

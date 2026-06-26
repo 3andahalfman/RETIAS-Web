@@ -129,27 +129,30 @@ function FeatureRow({ label, accent, gold }: { label: string; accent?: boolean; 
 }
 
 const FREE_FEATURES = [
-  '10-minute interview sessions',
+  '10-minute Real Interview sessions',
   'Real-time transcription',
   'Mock Interview mode',
-  'Session history',
+  'Stealth mode overlay',
+  'Auto-Typer',
+  'Session history & web dashboard',
   'CV Manager (3 CVs)',
 ]
 const PRO_FEATURES = [
-  'Unlimited sessions',
-  'AI Screen Analysis',
-  'Manual prompt bar',
+  'Unlimited Real & Mock sessions',
+  'Screenshot capture & Analyse All',
   'Online Assessment & Onboarding',
   'Dual-monitor screen capture',
-  'Resume Optimizer',
-  'Pick your AI model',
-  'Priority support',
+  'Manual prompt bar',
+  'Resume Optimizer (web dashboard)',
+  'Choose your AI model (Sonnet)',
+  'Priority email support',
 ]
 const PRO_PLUS_FEATURES = [
   'Everything in Premium',
   'Solved Assessment library',
-  'Humanized AI answers (unique per user)',
-  'Top-tier AI (Claude Opus 4.5)',
+  'Go Live from saved Q&A',
+  'Paraphrase & Humanize answers',
+  'Claude Opus 4.5 model',
   'Early access to new features',
   'Dedicated support channel',
 ]

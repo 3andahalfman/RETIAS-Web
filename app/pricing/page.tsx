@@ -58,7 +58,9 @@ export default function PricingPage() {
       <section className="pricing-section" style={{ maxWidth: 1100, margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: 48 }}>
           <h1 style={{ fontSize: 40, fontWeight: 800, marginBottom: 14, letterSpacing: '-1px' }}>Simple pricing</h1>
-          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 16 }}>Start free. Upgrade when you&apos;re ready.</p>
+          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 16, maxWidth: 560, margin: '0 auto', lineHeight: 1.65 }}>
+            Start free with interviews, stealth mode, and Auto-Typer. Upgrade for screenshot analysis, Online Assessment, and the Solved Q&A library with Go Live and paraphrase tools.
+          </p>
         </div>
         <PlanCards />
       </section>
