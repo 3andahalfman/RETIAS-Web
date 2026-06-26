@@ -36,9 +36,9 @@ Convert visitors to paid users. Show the three tiers (Free / Premium / Premium P
 ## Features
 
 - Three tiers: Free, Premium ($10/mo USD display), Premium Plus ($25/mo USD display)
-- Free: Real/Mock interviews (10 min cap on Real), stealth, Auto-Typer, session history, 3 CVs
-- Premium: unlimited sessions, screenshot Analyse All, Online Assessment, manual prompt, Sonnet model
-- Premium Plus: Solved library, Paraphrase & Humanize, Opus 4.5
+- Free: Real/Mock interviews (10 min cap on Real), stealth, context-aware answers, session history, 3 CVs
+- Premium: everything in Free, unlimited sessions, screenshot Analyse All, Online Assessment, manual prompt, Sonnet model
+- Premium Plus: Solved Q&A library, Auto-Typer, Paraphrase & Humanize, Opus 4.5
 - Active-subscription detection: shows "✓ Your current plan" on the matching tier and "Switch to Premium" / "Upgrade to Premium Plus" on the others
 - Logged-out checkout button redirects to `/login?next=/pricing` instead of opening Paystack
 - "POPULAR" ribbon on the Premium card
@@ -46,7 +46,7 @@ Convert visitors to paid users. Show the three tiers (Free / Premium / Premium P
 ## Copy (verbatim, currently live)
 
 > **Page heading:** Simple pricing
-> **Page subhead:** Start free with Real Interview, Mock Interview, stealth mode, context-aware answers, and Auto-Typer. Upgrade for screenshot analysis, Online Assessment, and the Solved Q&A library with paraphrase tools.
+> **Page subhead:** Start free with Real Interview, Mock Interview, stealth mode, and context-aware answers. Upgrade for screenshot analysis and Online Assessment. Premium Plus adds the Solved Q&A library, Auto-Typer, and paraphrase tools.
 > **Trust line:** Prices shown in USD · Charged in NGN at checkout via Paystack · Cancel anytime
 
 ### Plan content (`lib/plan-features.ts`, source of truth)
@@ -58,7 +58,6 @@ Convert visitors to paid users. Show the three tiers (Free / Premium / Premium P
 - Mock Interview mode
 - Stealth mode overlay
 - CV-aware answers (3 CVs)
-- Auto-Typer
 - Session history & web dashboard
 
 **Premium — $10 /mo — POPULAR**
@@ -73,6 +72,7 @@ Convert visitors to paid users. Show the three tiers (Free / Premium / Premium P
 **Premium Plus — $25 /mo**
 - Everything in Premium
 - Solved Assessment library
+- Auto-Typer
 - Paraphrase & Humanize answers
 - Claude Opus 4.5 model
 - Early access to new features

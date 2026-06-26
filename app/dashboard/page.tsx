@@ -143,7 +143,7 @@ const SESSION_TYPES = [
   },
   {
     title: 'Online Assessment',
-    desc: 'Capture screenshots, Analyse All for AI answers, or browse the Solved Assessment library.',
+    desc: 'Capture screenshots and Analyse All for AI answers. Premium Plus unlocks the Solved Assessment library and Auto-Typer.',
     icon: '💻',
     bg: 'rgba(251,146,60,0.15)',
     color: '#fb923c',

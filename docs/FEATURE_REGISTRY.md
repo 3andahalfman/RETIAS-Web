@@ -41,7 +41,7 @@ When you add **any** new user-facing feature (desktop, web, or both):
 | F-012 | AI model picker | Choose Sonnet vs Opus (Opus gated) | Premium / Plus | Desktop | — | ✓ | — |
 | F-013 | Solved Assessment library | Browse curated Q&A by platform; study or go live | Premium Plus | Desktop | ✓ | ✓ | — |
 | F-014 | Paraphrase / Humanize | Highlight answer text → QuillBot-style rewrite (admin opt-in per question) | Premium Plus | Desktop | ✓ | ✓ | — |
-| F-015 | Auto-Typer | Paste answers into any field at human-like speed | All (usage varies) | Desktop | ✓ | ✓ | — |
+| F-015 | Auto-Typer | Paste answers into any field at human-like speed | Premium Plus | Desktop | ✓ | ✓ | — |
 | F-016 | Go Live (Solved Q&A) | Run a live assessment session from a saved solved question | Premium Plus | Desktop | — | — | — |
 | F-017 | Screenshot Library (admin) | Review scored captures; send Q&A to Solved bank | Admin | Desktop + Web | — | — | admin (`/dashboard/screenshots`) |
 | F-018 | Admin billing overview | All subscribers, plan, renewal status | Admin | Web | — | — | admin (`/dashboard/billing`) |
@@ -94,7 +94,7 @@ Append-only — newest first.
 
 | Date | ID(s) | Note |
 |---|---|---|
-| 2025-06-23 | F-002, F-003, F-004 | Sync pricing tiers with landing — Context-aware answers, CV-aware, stealth; centralised bullets in `lib/plan-features.ts` |
+| 2025-06-23 | F-013, F-015 | Auto-Typer and Solved Q&A library gated to Premium Plus on pricing and landing copy |
 | 2025-06-23 | F-009–F-016, F-015 | Landing + pricing + dashboard copy updated for screenshot analyse, Solved library, Go Live, paraphrase, Auto-Typer, dual-monitor |
 | 2025-06-23 | — | Created feature registry; documented website content gaps vs desktop app |
 | 2025-06-23 | F-025 | Support email → `realmsemerald@gmail.com` (temporary until domain mail forwarding) |

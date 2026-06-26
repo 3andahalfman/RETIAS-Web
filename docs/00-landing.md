@@ -69,9 +69,9 @@ The marketing front door. A first-time visitor should leave knowing what RETIAS 
 | 👁️ | Stealth mode overlay | Invisible to screen-sharing software. Dock to a corner and expand when you need help — your interviewer sees nothing. |
 | 📄 | CV-aware suggestions | Upload your resume and RETIAS personalises every answer to match your actual experience and skills. |
 | 📸 | Screenshot capture & analysis | During online tests, capture up to five screenshots, then Analyse All for instant AI answers — coding, MCQ, verbal reasoning, and onboarding screens. |
-| 📚 | Solved Assessment library | Browse curated Q&A by platform and assessment type — study offline or jump straight into a coached session. |
+| 📚 | Solved Assessment library | Browse curated Q&A by platform and assessment type — study offline from the Premium Plus library. |
 | ✍️ | Paraphrase & Humanize | Highlight any answer and rewrite it in your voice — paraphrase for clarity or humanize to sound natural (Premium Plus). |
-| ⌨️ | Auto-Typer | Send any answer to the built-in typer and paste it into forms, IDE fields, or essay boxes at a natural human pace. |
+| ⌨️ | Auto-Typer | Paste answers into forms, IDE fields, or essay boxes at a natural human pace — included with Premium Plus. |
 | 📊 | Session history & analytics | Review every session on web and desktop, track progress, and spot patterns across companies and roles. |
 
 When you add features, also surface them here AND in the pricing doc. **Register first** in [FEATURE_REGISTRY.md](./FEATURE_REGISTRY.md).
@@ -82,7 +82,7 @@ When you add features, also surface them here AND in the pricing doc. **Register
 |---|---|
 | Real Interview | Live coaching while the interviewer speaks — transcription, context-aware answers, and a stealth overlay you control. |
 | Mock Interview | Practice with YouTube mock interviews. RETIAS listens, detects questions, and coaches you in real time using your CV. |
-| Online Assessment & Onboarding | Capture screenshots, stack frames, and Analyse All for scored answers — or browse the Solved Assessment library to study curated Q&A. |
+| Online Assessment & Onboarding | Capture screenshots, stack frames, and Analyse All for scored answers. Premium Plus unlocks the Solved Assessment library and Auto-Typer. |
 
 ### Website vs product (known gaps)
 
