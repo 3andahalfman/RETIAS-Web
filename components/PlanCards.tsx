@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase'
 import PaystackCheckout from '@/components/PaystackCheckout'
+import { PLAN_FEATURES } from '@/lib/plan-features'
 
 const PLAN_PRO = process.env.NEXT_PUBLIC_PAYSTACK_PLAN_PRO as string
 const PLAN_PLUS = process.env.NEXT_PUBLIC_PAYSTACK_PLAN_PLUS as string
@@ -72,7 +73,7 @@ export default function PlanCards() {
           <p style={tierLabel('rgba(255,255,255,0.4)')}>Free</p>
           <p style={priceStyle}>{PRICE_FREE}</p>
           <p style={periodStyle}>Forever free</p>
-          <div style={{ flex: 1 }}>{FREE_FEATURES.map(f => <FeatureRow key={f} label={f} />)}</div>
+          <div style={{ flex: 1 }}>{PLAN_FEATURES.free.map(f => <FeatureRow key={f} label={f} />)}</div>
           <div style={{ marginTop: 20 }}>
             {currentTier
               ? <div style={ctaBoxStyle('rgba(255,255,255,0.04)', 'rgba(255,255,255,0.4)')}>Included</div>
@@ -85,7 +86,7 @@ export default function PlanCards() {
           <div style={{ position: 'absolute', top: -1, right: 20, background: 'linear-gradient(135deg,#3b82f6,#60a5fa)', borderRadius: '0 0 8px 8px', padding: '4px 12px', fontSize: 11, fontWeight: 700, color: '#fff' }}>POPULAR</div>
           <p style={tierLabel('#60a5fa')}>Premium</p>
           <p style={priceStyle}>{PRICE_PRO}<span style={perMo}> /mo</span></p>
-          <div style={{ flex: 1, marginTop: 12 }}>{PRO_FEATURES.map(f => <FeatureRow key={f} label={f} accent />)}</div>
+          <div style={{ flex: 1, marginTop: 12 }}>{PLAN_FEATURES.premium.map(f => <FeatureRow key={f} label={f} accent />)}</div>
           <div style={{ marginTop: 20 }}>{renderCta('pro', PLAN_PRO, 'linear-gradient(135deg,#3b82f6,#2563eb)', 'Upgrade to Premium')}</div>
         </div>
 
@@ -93,7 +94,7 @@ export default function PlanCards() {
         <div style={cardStyle('linear-gradient(145deg, rgba(245,158,11,0.10), rgba(251,146,60,0.06))', 'rgba(245,158,11,0.3)')}>
           <p style={tierLabel('#fbbf24')}>Premium Plus</p>
           <p style={priceStyle}>{PRICE_PLUS}<span style={perMo}> /mo</span></p>
-          <div style={{ flex: 1, marginTop: 12 }}>{PRO_PLUS_FEATURES.map(f => <FeatureRow key={f} label={f} gold />)}</div>
+          <div style={{ flex: 1, marginTop: 12 }}>{PLAN_FEATURES.premiumPlus.map(f => <FeatureRow key={f} label={f} gold />)}</div>
           <div style={{ marginTop: 20 }}>{renderCta('plus', PLAN_PLUS, 'linear-gradient(135deg,#f59e0b,#d97706)', 'Upgrade to Premium Plus')}</div>
         </div>
       </div>
@@ -127,29 +128,3 @@ function FeatureRow({ label, accent, gold }: { label: string; accent?: boolean; 
     </div>
   )
 }
-
-const FREE_FEATURES = [
-  '10-minute Real Interview sessions',
-  'Real-time transcription',
-  'Mock Interview mode',
-  'Stealth mode overlay',
-  'Auto-Typer',
-  'Session history & web dashboard',
-  'CV Manager (3 CVs)',
-]
-const PRO_FEATURES = [
-  'Unlimited Real & Mock sessions',
-  'Screenshot capture & Analyse All',
-  'Online Assessment & Onboarding',
-  'Manual prompt bar',
-  'Choose your AI model (Sonnet)',
-  'Priority email support',
-]
-const PRO_PLUS_FEATURES = [
-  'Everything in Premium',
-  'Solved Assessment library',
-  'Paraphrase & Humanize answers',
-  'Claude Opus 4.5 model',
-  'Early access to new features',
-  'Dedicated support channel',
-]

@@ -14,7 +14,7 @@ When you add **any** new user-facing feature (desktop, web, or both):
 2. **Set website columns** — `Landing`, `Pricing`, `Dashboard` → `✓`, `partial`, `—`, or `admin`.
 3. **If the feature is customer-facing marketing:**
    - Append to `FEATURES` in `app/page.tsx` **and** update the table in [00-landing.md](./00-landing.md).
-   - If tier-gated, append to the correct array in `components/PlanCards.tsx` **and** update [02-pricing.md](./02-pricing.md).
+   - If tier-gated, append to the correct array in `lib/plan-features.ts` **and** update [02-pricing.md](./02-pricing.md).
 4. **If it gets its own page or dashboard section** — copy `_template.md`, add to [README.md](./README.md) page index, fill the page doc.
 5. **Add a changelog entry** at the bottom of this file (date + feature id + one line).
 6. **Desktop-only features:** still register here so the website gap is visible until copy is added.
@@ -28,8 +28,8 @@ When you add **any** new user-facing feature (desktop, web, or both):
 | ID | Feature | Description (user-facing) | Tier | Ships on | Landing | Pricing | Dashboard |
 |---|---|---|---|---|---|---|---|
 | F-001 | Real-time transcription | Live speech-to-text during interviews and assessments | Free | Desktop | ✓ | ✓ | — |
-| F-002 | Context-aware answers | AI answers use CV, job description, and the question asked | Free | Desktop | ✓ | — | — |
-| F-003 | Stealth overlay | Overlay hidden from screen sharing; dock/expand workflow | Free | Desktop | ✓ | — | — |
+| F-002 | Context-aware answers | AI answers use CV, job description, and the question asked | Free | Desktop | ✓ | ✓ | — |
+| F-003 | Stealth overlay | Overlay hidden from screen sharing; dock/expand workflow | Free | Desktop | ✓ | ✓ | — |
 | F-004 | CV Manager | Upload and manage resumes; powers personalised answers | Free (3 CVs) | Desktop + Web | ✓ | ✓ | ✓ (`/dashboard/cvs`) |
 | F-005 | Resume Optimizer | ATS score, keyword gaps, AI-optimised CV vs a job description | Premium | Web + Desktop link | — | — | ✓ |
 | F-006 | Session history | Review past sessions, Q&A, transcripts | Free | Desktop + Web | ✓ | ✓ | ✓ (`/dashboard/sessions`) |
@@ -76,7 +76,7 @@ When you add **any** new user-facing feature (desktop, web, or both):
 | Sign up `/signup` | [10-signup.md](./10-signup.md) | `components/AuthPage.tsx` (`initialMode="signup"`) |
 | Forgot password | [11-forgot-password.md](./11-forgot-password.md) | `app/forgot-password/page.tsx` |
 | Reset password | [12-reset-password.md](./12-reset-password.md) | `app/reset-password/page.tsx` |
-| Pricing `/pricing` | [02-pricing.md](./02-pricing.md) | `components/PlanCards.tsx` → `*_FEATURES` arrays |
+| Pricing `/pricing` | [02-pricing.md](./02-pricing.md) | `lib/plan-features.ts` → imported by `components/PlanCards.tsx` |
 | Dashboard overview | [03-dashboard-overview.md](./03-dashboard-overview.md) | `app/dashboard/page.tsx` |
 | Sessions | [04-dashboard-sessions.md](./04-dashboard-sessions.md) | `app/dashboard/sessions/page.tsx` |
 | Session detail | [05-dashboard-session-detail.md](./05-dashboard-session-detail.md) | `app/dashboard/sessions/[id]/page.tsx` |
@@ -94,6 +94,7 @@ Append-only — newest first.
 
 | Date | ID(s) | Note |
 |---|---|---|
+| 2025-06-23 | F-002, F-003, F-004 | Sync pricing tiers with landing — Context-aware answers, CV-aware, stealth; centralised bullets in `lib/plan-features.ts` |
 | 2025-06-23 | F-009–F-016, F-015 | Landing + pricing + dashboard copy updated for screenshot analyse, Solved library, Go Live, paraphrase, Auto-Typer, dual-monitor |
 | 2025-06-23 | — | Created feature registry; documented website content gaps vs desktop app |
 | 2025-06-23 | F-025 | Support email → `realmsemerald@gmail.com` (temporary until domain mail forwarding) |

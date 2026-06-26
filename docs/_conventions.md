@@ -77,10 +77,7 @@ This is the canonical download URL. Don't hardcode it elsewhere — if it ever n
 
 ## Pricing source of truth
 
-`components/PlanCards.tsx` holds the three feature arrays:
-- `FREE_FEATURES`
-- `PRO_FEATURES`
-- `PRO_PLUS_FEATURES`
+`lib/plan-features.ts` holds the three feature arrays (`free`, `premium`, `premiumPlus`). `components/PlanCards.tsx` imports them.
 
 Both `/pricing` and `<PricingModal/>` render the same component, so editing the arrays updates every surface at once.
 

@@ -46,19 +46,20 @@ Convert visitors to paid users. Show the three tiers (Free / Premium / Premium P
 ## Copy (verbatim, currently live)
 
 > **Page heading:** Simple pricing
-> **Page subhead:** Start free with interviews, stealth mode, and Auto-Typer. Upgrade for screenshot analysis, Online Assessment, and the Solved Q&A library with paraphrase tools.
+> **Page subhead:** Start free with Real Interview, Mock Interview, stealth mode, context-aware answers, and Auto-Typer. Upgrade for screenshot analysis, Online Assessment, and the Solved Q&A library with paraphrase tools.
 > **Trust line:** Prices shown in USD · Charged in NGN at checkout via Paystack · Cancel anytime
 
-### Plan content (PlanCards feature arrays, source of truth)
+### Plan content (`lib/plan-features.ts`, source of truth)
 
 **Free — $0 — Forever free**
 - 10-minute Real Interview sessions
 - Real-time transcription
+- Context-aware answers
 - Mock Interview mode
 - Stealth mode overlay
+- CV-aware answers (3 CVs)
 - Auto-Typer
 - Session history & web dashboard
-- CV Manager (3 CVs)
 
 **Premium — $10 /mo — POPULAR**
 - Unlimited Real & Mock sessions
@@ -87,7 +88,7 @@ Convert visitors to paid users. Show the three tiers (Free / Premium / Premium P
 
 ## How to extend
 
-- **Add a feature to a tier** — append to the matching `*_FEATURES` array at the bottom of `PlanCards.tsx`. The pricing page and PricingModal update automatically.
+- **Add a feature to a tier** — append to the matching array in `lib/plan-features.ts`. `PlanCards` (pricing page + PricingModal) updates automatically.
 - **Change a price** — edit the `<p style={priceStyle}>₦…</p>` literal inside `PlanCards.tsx`. Also update the Paystack plan code env var if the plan is brand new (the plan code is the source of truth for actual billing).
 - **Add a new tier** — duplicate one of the existing card blocks in `PlanCards.tsx`, add a feature array, add `NEXT_PUBLIC_PAYSTACK_PLAN_X` env, extend the `tier` union in `verify-payment` + `paystack-webhook` edge functions.
 - **Move the "POPULAR" ribbon** — it's the absolute-positioned div inside the Premium card.

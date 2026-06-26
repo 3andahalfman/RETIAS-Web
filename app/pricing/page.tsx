@@ -59,7 +59,7 @@ export default function PricingPage() {
         <div style={{ textAlign: 'center', marginBottom: 48 }}>
           <h1 style={{ fontSize: 40, fontWeight: 800, marginBottom: 14, letterSpacing: '-1px' }}>Simple pricing</h1>
           <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 16, maxWidth: 560, margin: '0 auto', lineHeight: 1.65 }}>
-            Start free with interviews, stealth mode, and Auto-Typer. Upgrade for screenshot analysis, Online Assessment, and the Solved Q&A library with paraphrase tools.
+            Start free with Real Interview, Mock Interview, stealth mode, context-aware answers, and Auto-Typer. Upgrade for screenshot analysis, Online Assessment, and the Solved Q&A library with paraphrase tools.
           </p>
         </div>
         <PlanCards />
