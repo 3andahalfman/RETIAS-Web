@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import type { User } from '@supabase/supabase-js'
 import Sidebar from '@/components/Sidebar'
+import { isAdminEmail } from '@/lib/admin'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -33,7 +34,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     )
   }
 
-  const isPremium = user?.app_metadata?.is_premium === true
+  const isPremium = user?.app_metadata?.is_premium === true || isAdminEmail(user?.email)
 
   return (
     <div className="flex min-h-screen" style={{ background: '#09090f' }}>

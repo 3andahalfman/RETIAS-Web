@@ -42,7 +42,7 @@ export default function Sidebar({ user, isPremium }: { user: User; isPremium: bo
     return () => document.removeEventListener('mousedown', onClick)
   }, [menuOpen])
 
-  const isPlus = user.app_metadata?.is_premium_plus === true
+  const isPlus = user.app_metadata?.is_premium_plus === true || isAdminEmail(user.email)
 
   async function handleLogout() {
     const supabase = createClient()
