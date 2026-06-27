@@ -4,7 +4,7 @@
 |---|---|
 | **Route** | `/dashboard/billing` |
 | **File** | `app/dashboard/billing/page.tsx` |
-| **Auth gate** | Admin (`admin@retias.com`) |
+| **Auth gate** | Admin (`juliaodaramola@gmail.com`) |
 | **Status** | Live |
 
 ## Purpose

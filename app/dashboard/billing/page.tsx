@@ -77,7 +77,7 @@ export default function BillingPage() {
           <p style={{ fontSize: 32, marginBottom: 12 }}>🔒</p>
           <h1 className="text-xl font-bold mb-2" style={{ color: 'var(--text-1)' }}>Admin only</h1>
           <p className="text-sm" style={{ color: 'var(--text-2)' }}>
-            Billing overview is restricted to admin@retias.com.
+            Billing overview is restricted to the site administrator.
           </p>
         </div>
       </div>

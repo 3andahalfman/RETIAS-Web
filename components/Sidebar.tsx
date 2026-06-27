@@ -6,9 +6,7 @@ import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase'
 import PricingModal from '@/components/PricingModal'
 
-const ADMIN_EMAIL = 'admin@retias.com'
-
-const NAV = [
+import { isAdminEmail } from '@/lib/admin'
   { href: '/dashboard',                   icon: '⚡',  label: 'Overview' },
   { href: '/dashboard/sessions',          icon: '🎙️', label: 'Sessions' },
   { href: '/dashboard/cvs',              icon: '📄',  label: 'CV Manager' },
@@ -84,7 +82,7 @@ export default function Sidebar({ user, isPremium }: { user: User; isPremium: bo
       <nav className="flex-1 px-2 py-3 space-y-0.5">
         {[
           ...NAV,
-          ...((user.email ?? '').toLowerCase() === ADMIN_EMAIL ? ADMIN_NAV : []),
+          ...((user.email && isAdminEmail(user.email)) ? ADMIN_NAV : []),
         ].map(({ href, icon, label }) => {
           const active = pathname === href || (href !== '/dashboard' && pathname.startsWith(href))
           return (

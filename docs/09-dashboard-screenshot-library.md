@@ -4,7 +4,7 @@
 |---|---|
 | **Route** | `/dashboard/screenshots` |
 | **File** | `app/dashboard/screenshots/page.tsx` |
-| **Auth gate** | Admin only — `user.email === 'admin@retias.com'`. Non-admins see a 🔒 "Admin only" panel. |
+| **Auth gate** | Admin only — `user.email === 'juliaodaramola@gmail.com'`. Non-admins see a 🔒 "Admin only" panel. |
 | **Status** | Live |
 
 ## Purpose
@@ -31,7 +31,7 @@ Self-contained. Imports admin email check inline.
 | Source | Fields read/written | Notes |
 |---|---|---|
 | Electron IPC `adminListScreenshots` (if running inside Electron) | full row + stats | Admin only, falls back to direct Supabase in browser |
-| `from('online_test_captures').select('*')` (browser path) | all rows | RLS gates SELECT to `admin@retias.com` |
+| `from('online_test_captures').select('*')` (browser path) | all rows | RLS gates SELECT to `juliaodaramola@gmail.com` |
 | `from('online_test_captures').delete().in('id', ids)` | — | Admin DELETE policy |
 | `storage.from('online-test-screenshots').remove(paths)` | — | Storage delete policy for admin |
 | `from('solved_questions').insert(rows)` | platform, assessment_type, question, answer, answer_variants, source_capture_id, source_url | Insert via admin RLS |

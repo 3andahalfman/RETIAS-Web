@@ -2,8 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
-
-const ADMIN_EMAIL = 'admin@retias.com'
+import { isAdminEmail } from '@/lib/admin'
 const STORAGE_BUCKET = 'online-test-screenshots'
 
 declare global {
@@ -88,7 +87,7 @@ export default function ScreenshotLibraryPage() {
     const supabase = createClient()
 
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user || (user.email ?? '').toLowerCase() !== ADMIN_EMAIL) {
+    if (!user || !isAdminEmail(user.email)) {
       setForbidden(true)
       setLoading(false)
       return
