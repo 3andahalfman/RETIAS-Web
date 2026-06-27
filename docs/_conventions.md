@@ -9,9 +9,9 @@ Cross-cutting rules every page doc inherits.
 | **Public** | No check | Landing, Login, Pricing |
 | **Signed-in** | `supabase.auth.getUser()` returns a user, otherwise `router.replace('/login')` | `app/dashboard/layout.tsx` |
 | **Premium / Premium Plus** | `user.app_metadata.is_premium` / `is_premium_plus` boolean from JWT | Inside each gated route |
-| **Admin** | `user.email === 'juliaodaramola@gmail.com'` | Sidebar nav + Screenshot Library page |
+| **Admin** | `isAdminEmail(user.email)` — `juliaodaramola@gmail.com` | `lib/admin.ts`; used by Sidebar, screenshot library, billing API |
 
-Admin email lives in `components/Sidebar.tsx` (`ADMIN_EMAIL`) and `app/dashboard/screenshots/page.tsx`. Change it in one place at a time and keep them in sync.
+Admin email lives in `lib/admin.ts`. Update that file and the Supabase RLS policies together when changing admins.
 
 ## Subscription tiers
 

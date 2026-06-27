@@ -7,6 +7,8 @@ import { createClient } from '@/lib/supabase'
 import PricingModal from '@/components/PricingModal'
 
 import { isAdminEmail } from '@/lib/admin'
+
+const NAV = [
   { href: '/dashboard',                   icon: '⚡',  label: 'Overview' },
   { href: '/dashboard/sessions',          icon: '🎙️', label: 'Sessions' },
   { href: '/dashboard/cvs',              icon: '📄',  label: 'CV Manager' },
