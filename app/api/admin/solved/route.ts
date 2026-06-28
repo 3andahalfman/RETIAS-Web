@@ -9,7 +9,7 @@ export async function GET(req: Request) {
   const admin = serviceRoleClient()
   const { data, error } = await admin
     .from('solved_questions')
-    .select('id, platform, assessment_type, question, answer, created_at')
+    .select('id, platform, assessment_type, question, answer, created_at, source_capture_id')
     .order('platform')
     .order('assessment_type')
     .order('created_at', { ascending: false })
@@ -69,9 +69,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'At least one valid row is required.' }, { status: 400 })
     }
 
-    const { error } = await admin.from('solved_questions').upsert(inserts, {
-      onConflict: 'platform,assessment_type,question',
-    })
+    const captureId = inserts[0]?.source_capture_id
+    if (captureId && inserts.every((r) => r?.source_capture_id === captureId)) {
+      const { data: existing } = await admin
+        .from('solved_questions')
+        .select('id')
+        .eq('source_capture_id', captureId)
+        .limit(1)
+      if (existing?.length) {
+        return NextResponse.json(
+          { error: 'This capture is already in Solved Assessment.', duplicate: true },
+          { status: 409 },
+        )
+      }
+    }
+
+    const { error } = await admin.from('solved_questions').insert(inserts)
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }

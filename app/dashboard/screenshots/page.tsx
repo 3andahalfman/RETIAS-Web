@@ -55,6 +55,19 @@ interface SolvedRow {
   question: string
   answer: string
   created_at: string
+  source_capture_id: string | null
+}
+
+function InSolvedBadge({ compact = false }: { compact?: boolean }) {
+  return (
+    <span
+      className={`font-semibold rounded-full shrink-0 ${compact ? 'text-[10px] px-2 py-0.5' : 'text-xs px-2.5 py-1'}`}
+      style={{ background: 'rgba(52,211,153,0.15)', color: '#34d399', border: '1px solid rgba(52,211,153,0.35)' }}
+      title="Already sent to Solved Assessment"
+    >
+      ✓ In Solved
+    </span>
+  )
 }
 
 function preview(text: string, max = 90): string {
@@ -111,7 +124,7 @@ export default function ScreenshotLibraryPage() {
   const [sendAnswerText, setSendAnswerText] = useState('')
   const [sending, setSending] = useState(false)
   const [sendError, setSendError] = useState<string | null>(null)
-  const [sendSuccess, setSendSuccess] = useState<string | null>(null)
+  const [sendDone, setSendDone] = useState(false)
   const [sendParaphraseEnabled, setSendParaphraseEnabled] = useState(false)
   const [thumbUrls, setThumbUrls] = useState<Record<string, string>>({})
   const [detailUrls, setDetailUrls] = useState<string[]>([])
@@ -123,6 +136,7 @@ export default function ScreenshotLibraryPage() {
   const [expandedSolvedId, setExpandedSolvedId] = useState<string | null>(null)
   const [deletingSolvedId, setDeletingSolvedId] = useState<string | null>(null)
   const [deletingSolvedGroup, setDeletingSolvedGroup] = useState<string | null>(null)
+  const [selectedUserEmail, setSelectedUserEmail] = useState<string | null>(null)
 
   const loadCaptures = useCallback(async () => {
     setLoading(true)
@@ -174,10 +188,61 @@ export default function ScreenshotLibraryPage() {
 
   useEffect(() => { void loadAll() }, [loadAll])
 
+  const sentCaptureIds = useMemo(() => {
+    const ids = new Set<string>()
+    for (const row of solvedRows) {
+      if (row.source_capture_id) ids.add(row.source_capture_id)
+    }
+    return ids
+  }, [solvedRows])
+
+  const isCaptureInSolved = useCallback((captureId: string) => sentCaptureIds.has(captureId), [sentCaptureIds])
+
+  const userSummaries = useMemo(() => {
+    const map = new Map<string, { email: string; captures: OnlineTestCapture[] }>()
+    for (const cap of captures) {
+      const email = cap.user_email?.trim() || 'Unknown user'
+      if (!map.has(email)) map.set(email, { email, captures: [] })
+      map.get(email)!.captures.push(cap)
+    }
+    return Array.from(map.values())
+      .map((u) => ({
+        ...u,
+        captures: u.captures.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
+      }))
+      .sort((a, b) => b.captures.length - a.captures.length || a.email.localeCompare(b.email))
+  }, [captures])
+
+  const activeUser = useMemo(
+    () => userSummaries.find((u) => u.email === selectedUserEmail) ?? null,
+    [userSummaries, selectedUserEmail],
+  )
+
+  const activeUserCaptures = activeUser?.captures ?? []
+
+  useEffect(() => {
+    if (!userSummaries.length) {
+      setSelectedUserEmail(null)
+      return
+    }
+    if (!selectedUserEmail || !userSummaries.some((u) => u.email === selectedUserEmail)) {
+      setSelectedUserEmail(userSummaries[0].email)
+    }
+  }, [userSummaries, selectedUserEmail])
+
+  const selectUser = useCallback((email: string) => {
+    setSelectedUserEmail(email)
+    setSelectedId((prev) => {
+      if (!prev) return null
+      const cap = captures.find((c) => c.id === prev)
+      return cap?.user_email === email ? prev : null
+    })
+  }, [captures])
+
   const selected = captures.find((c) => c.id === selectedId) ?? null
 
   useEffect(() => {
-    if (!captures.length) {
+    if (!activeUserCaptures.length) {
       setThumbUrls({})
       return
     }
@@ -185,7 +250,7 @@ export default function ScreenshotLibraryPage() {
     ;(async () => {
       const urls: Record<string, string> = {}
       await Promise.all(
-        captures.slice(0, 50).map(async (cap) => {
+        activeUserCaptures.slice(0, 50).map(async (cap) => {
           const path = cap.screenshot_paths[0]
           if (!path) return
           const url = await fetchScreenshotUrl(path).catch(() => null)
@@ -195,7 +260,7 @@ export default function ScreenshotLibraryPage() {
       if (!cancelled) setThumbUrls(urls)
     })()
     return () => { cancelled = true }
-  }, [captures])
+  }, [activeUserCaptures])
 
   useEffect(() => {
     if (!selected) {
@@ -246,6 +311,7 @@ export default function ScreenshotLibraryPage() {
   }, [selectedId])
 
   const openSendModal = useCallback((cap: OnlineTestCapture) => {
+    if (sentCaptureIds.has(cap.id)) return
     setSendModalCap(cap)
     setSendPlatform(cap.detected_platform ?? '')
     setSendAssessment(cap.detected_test_type ?? '')
@@ -253,21 +319,31 @@ export default function ScreenshotLibraryPage() {
     setSendAnswerText(cap.ai_answer ?? '')
     setSendParaphraseEnabled(false)
     setSendError(null)
-    setSendSuccess(null)
-  }, [])
+    setSendDone(false)
+  }, [sentCaptureIds])
 
   const closeSendModal = useCallback(() => {
     setSendModalCap(null)
     setSending(false)
     setSendError(null)
-    setSendSuccess(null)
+    setSendDone(false)
   }, [])
+
+  useEffect(() => {
+    if (!sendDone) return
+    const t = setTimeout(() => closeSendModal(), 900)
+    return () => clearTimeout(t)
+  }, [sendDone, closeSendModal])
 
   const handleSendToSolved = useCallback(async () => {
     if (!sendModalCap) return
+    if (sentCaptureIds.has(sendModalCap.id)) {
+      setSendError('This capture is already in Solved Assessment.')
+      return
+    }
     setSending(true)
     setSendError(null)
-    setSendSuccess(null)
+    setSendDone(false)
     try {
       const platform = sendPlatform.trim()
       const assessment = sendAssessment.trim()
@@ -300,14 +376,13 @@ export default function ScreenshotLibraryPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Insert failed')
       await loadSolved()
-      closeSendModal()
-      setTab('solved')
+      setSendDone(true)
     } catch (err) {
       setSendError(err instanceof Error ? err.message : 'Failed to send to Solved Assessment bank.')
     } finally {
       setSending(false)
     }
-  }, [sendModalCap, sendPlatform, sendAssessment, sendQuestionsText, sendAnswerText, sendParaphraseEnabled, closeSendModal, loadSolved, setTab])
+  }, [sendModalCap, sendPlatform, sendAssessment, sendQuestionsText, sendAnswerText, sendParaphraseEnabled, loadSolved, sentCaptureIds])
 
   const filteredSolved = useMemo(() => {
     const q = solvedSearch.trim().toLowerCase()
@@ -463,12 +538,76 @@ export default function ScreenshotLibraryPage() {
         </div>
       )}
 
-      <div className="grid gap-4" style={{ gridTemplateColumns: selected ? '1fr 1fr' : '1fr' }}>
-        {/* List, grouped by session */}
-        <div className="space-y-4">
+      {!loading && captures.length > 0 && (
+      <div
+        className="grid gap-4"
+        style={{
+          gridTemplateColumns: selected
+            ? 'minmax(150px, 190px) minmax(0, 1fr) minmax(0, 1fr)'
+            : 'minmax(150px, 190px) minmax(0, 1fr)',
+        }}
+      >
+        {/* User rail */}
+        <div className="rounded-xl p-2 self-start sticky top-4 max-h-[calc(100vh-8rem)] overflow-y-auto"
+          style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+          <p className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1.5 mb-1"
+            style={{ color: 'var(--text-3)' }}>
+            Users ({userSummaries.length})
+          </p>
+          <div className="space-y-1">
+            {userSummaries.map((u) => {
+              const active = u.email === selectedUserEmail
+              const scored = u.captures.filter((c) => c.score_overall != null)
+              const avg = scored.length
+                ? Math.round(scored.reduce((s, c) => s + Number(c.score_overall), 0) / scored.length)
+                : null
+              return (
+                <button
+                  key={u.email}
+                  type="button"
+                  onClick={() => selectUser(u.email)}
+                  className="w-full text-left rounded-lg px-2.5 py-2 transition-colors"
+                  style={{
+                    background: active ? 'rgba(59,130,246,0.15)' : 'transparent',
+                    border: active ? '1px solid rgba(59,130,246,0.3)' : '1px solid transparent',
+                  }}
+                >
+                  <p className="text-xs font-semibold truncate" style={{ color: active ? '#60a5fa' : 'var(--text-1)' }}>
+                    {u.email.split('@')[0]}
+                  </p>
+                  <p className="text-[10px] truncate mt-0.5" style={{ color: 'var(--text-3)' }}>{u.email}</p>
+                  <p className="text-[10px] mt-1" style={{ color: 'var(--text-3)' }}>
+                    {u.captures.length} capture{u.captures.length !== 1 ? 's' : ''}
+                    {avg != null && <> · avg {avg}</>}
+                  </p>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Captures for selected user, grouped by session */}
+        <div className="space-y-4 min-w-0">
+          {activeUser && (
+            <div className="flex items-center justify-between pb-2 border-b" style={{ borderColor: 'var(--border)' }}>
+              <div className="min-w-0">
+                <p className="text-sm font-bold truncate" style={{ color: 'var(--text-1)' }}>{activeUser.email}</p>
+                <p className="text-xs" style={{ color: 'var(--text-3)' }}>
+                  {activeUser.captures.length} capture{activeUser.captures.length !== 1 ? 's' : ''} for this account
+                </p>
+              </div>
+            </div>
+          )}
+
+          {activeUserCaptures.length === 0 && !loading && (
+            <div className="glass py-10 text-center">
+              <p className="text-sm" style={{ color: 'var(--text-2)' }}>No captures for this user.</p>
+            </div>
+          )}
+
           {(() => {
             const groups = new Map<string, OnlineTestCapture[]>()
-            for (const cap of captures) {
+            for (const cap of activeUserCaptures) {
               const key = cap.session_id ?? `solo-${cap.id}`
               const arr = groups.get(key) ?? []
               arr.push(cap)
@@ -485,8 +624,7 @@ export default function ScreenshotLibraryPage() {
                     style={{ borderColor: 'var(--border)' }}>
                     <p className="text-[10px] font-semibold uppercase tracking-wider"
                       style={{ color: 'var(--text-3)' }}>
-                      <span>{groupLabel}</span>
-                      <span className="ml-2 opacity-70">{head.user_email}</span>
+                      {groupLabel}
                     </p>
                     <button
                       type="button"
@@ -538,15 +676,19 @@ export default function ScreenshotLibraryPage() {
                         <div className="text-lg font-bold shrink-0" style={{ color: scoreColor(cap.score_overall) }}>
                           {cap.score_overall != null ? Math.round(cap.score_overall) : '—'}
                         </div>
-                        <span
-                          role="button"
-                          onClick={(e) => { e.stopPropagation(); openSendModal(cap) }}
-                          className="text-base p-1 rounded-md hover:bg-blue-500/10 shrink-0 cursor-pointer select-none"
-                          style={{ color: '#60a5fa' }}
-                          title="Send to Solved Assessment bank"
-                        >
-                          📤
-                        </span>
+                        {isCaptureInSolved(cap.id) ? (
+                          <InSolvedBadge compact />
+                        ) : (
+                          <span
+                            role="button"
+                            onClick={(e) => { e.stopPropagation(); openSendModal(cap) }}
+                            className="text-base p-1 rounded-md hover:bg-blue-500/10 shrink-0 cursor-pointer select-none"
+                            style={{ color: '#60a5fa' }}
+                            title="Send to Solved Assessment bank"
+                          >
+                            📤
+                          </span>
+                        )}
                         <span
                           role="button"
                           onClick={(e) => { e.stopPropagation(); handleDeleteCapture(cap) }}
@@ -632,15 +774,19 @@ export default function ScreenshotLibraryPage() {
               {selected.ai_answer}
             </pre>
 
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => openSendModal(selected)}
-                className="text-xs font-semibold px-3 py-2 rounded-lg transition-opacity hover:opacity-80"
-                style={{ background: 'linear-gradient(135deg,#3b82f6,#2563eb)', color: '#fff' }}
-              >
-                📤 Send to Solved Assessment bank
-              </button>
+            <div className="flex gap-2 flex-wrap items-center">
+              {isCaptureInSolved(selected.id) ? (
+                <InSolvedBadge />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => openSendModal(selected)}
+                  className="text-xs font-semibold px-3 py-2 rounded-lg transition-opacity hover:opacity-80"
+                  style={{ background: 'linear-gradient(135deg,#3b82f6,#2563eb)', color: '#fff' }}
+                >
+                  📤 Send to Solved Assessment bank
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => handleDeleteCapture(selected)}
@@ -653,6 +799,7 @@ export default function ScreenshotLibraryPage() {
           </div>
         )}
       </div>
+      )}
         </>
       )}
 
@@ -763,6 +910,13 @@ export default function ScreenshotLibraryPage() {
                 ✕
               </button>
             </div>
+            {sendDone ? (
+              <div className="text-center py-10">
+                <p className="text-5xl mb-3" style={{ color: '#34d399' }}>✓</p>
+                <p className="text-sm font-semibold" style={{ color: '#34d399' }}>Sent</p>
+              </div>
+            ) : (
+              <>
             <p className="text-xs mb-4" style={{ color: 'var(--text-3)' }}>
               Each blank-line-separated question becomes its own row. The same answer is attached to all of them.
             </p>
@@ -827,11 +981,6 @@ export default function ScreenshotLibraryPage() {
                 {sendError}
               </p>
             )}
-            {sendSuccess && (
-              <p className="text-xs mb-3 p-2 rounded-lg" style={{ background: 'rgba(52,211,153,0.1)', color: '#34d399' }}>
-                {sendSuccess}
-              </p>
-            )}
 
             <div className="flex justify-end gap-2">
               <button
@@ -846,13 +995,15 @@ export default function ScreenshotLibraryPage() {
               <button
                 type="button"
                 onClick={handleSendToSolved}
-                disabled={sending}
+                disabled={sending || (sendModalCap ? isCaptureInSolved(sendModalCap.id) : false)}
                 className="text-xs font-semibold px-4 py-2 rounded-lg disabled:opacity-40"
                 style={{ background: 'linear-gradient(135deg,#3b82f6,#2563eb)', color: '#fff' }}
               >
                 {sending ? 'Sending…' : 'Send'}
               </button>
             </div>
+              </>
+            )}
           </div>
         </div>
       )}
