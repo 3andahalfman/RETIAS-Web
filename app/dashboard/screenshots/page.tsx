@@ -4,6 +4,17 @@ import { useCallback, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { isAdminEmail } from '@/lib/admin'
 const STORAGE_BUCKET = 'online-test-screenshots'
+const SCREENSHOT_PATH_REGEX = /^[\w-]+\/[\w-]+\/\d+\.png$/
+
+async function fetchScreenshotUrl(path: string): Promise<string | null> {
+  if (!SCREENSHOT_PATH_REGEX.test(path)) return null
+  const supabase = createClient()
+  const { data, error } = await supabase.storage
+    .from(STORAGE_BUCKET)
+    .createSignedUrl(path, 3600)
+  if (error) return null
+  return data?.signedUrl ?? null
+}
 
 declare global {
   interface Window {
@@ -80,6 +91,8 @@ export default function ScreenshotLibraryPage() {
   const [sendError, setSendError] = useState<string | null>(null)
   const [sendSuccess, setSendSuccess] = useState<string | null>(null)
   const [sendParaphraseEnabled, setSendParaphraseEnabled] = useState(false)
+  const [thumbUrls, setThumbUrls] = useState<Record<string, string>>({})
+  const [detailUrls, setDetailUrls] = useState<string[]>([])
 
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -127,6 +140,46 @@ export default function ScreenshotLibraryPage() {
   }, [])
 
   useEffect(() => { loadData() }, [loadData])
+
+  const selected = captures.find((c) => c.id === selectedId) ?? null
+
+  useEffect(() => {
+    if (!captures.length) {
+      setThumbUrls({})
+      return
+    }
+    let cancelled = false
+    ;(async () => {
+      const urls: Record<string, string> = {}
+      await Promise.all(
+        captures.slice(0, 50).map(async (cap) => {
+          const path = cap.screenshot_paths[0]
+          if (!path) return
+          const url = await fetchScreenshotUrl(path).catch(() => null)
+          if (url && !cancelled) urls[cap.id] = url
+        }),
+      )
+      if (!cancelled) setThumbUrls(urls)
+    })()
+    return () => { cancelled = true }
+  }, [captures])
+
+  useEffect(() => {
+    if (!selected) {
+      setDetailUrls([])
+      return
+    }
+    let cancelled = false
+    ;(async () => {
+      const urls: string[] = []
+      for (const path of selected.screenshot_paths) {
+        const url = await fetchScreenshotUrl(path).catch(() => null)
+        if (url) urls.push(url)
+      }
+      if (!cancelled) setDetailUrls(urls)
+    })()
+    return () => { cancelled = true }
+  }, [selected])
 
   const handleDeleteCapture = useCallback(async (cap: OnlineTestCapture) => {
     if (!confirm(`Delete this capture from ${cap.user_email}? This removes the screenshots and AI answer permanently.`)) return
@@ -221,8 +274,6 @@ export default function ScreenshotLibraryPage() {
       setSending(false)
     }
   }, [sendModalCap, sendPlatform, sendAssessment, sendQuestionsText, sendAnswerText, sendParaphraseEnabled])
-
-  const selected = captures.find((c) => c.id === selectedId) ?? null
 
   if (forbidden) {
     return (
@@ -333,6 +384,16 @@ export default function ScreenshotLibraryPage() {
                           border: `1px solid ${selectedId === cap.id ? 'rgba(59,130,246,0.3)' : 'var(--border)'}`,
                         }}
                       >
+                        <div
+                          className="w-14 h-10 rounded-md overflow-hidden shrink-0 flex items-center justify-center"
+                          style={{ background: 'rgba(0,0,0,0.25)', border: '1px solid var(--border)' }}
+                        >
+                          {thumbUrls[cap.id] ? (
+                            <img src={thumbUrls[cap.id]} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-lg">📸</span>
+                          )}
+                        </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate" style={{ color: 'var(--text-1)' }}>
                             {formatTestType(cap.detected_test_type || cap.test_type)}
@@ -414,6 +475,20 @@ export default function ScreenshotLibraryPage() {
               <p className="text-xs italic mb-4 p-3 rounded-lg" style={{ color: 'var(--text-2)', background: 'rgba(0,0,0,0.2)' }}>
                 {selected.score_notes}
               </p>
+            )}
+
+            {detailUrls.length > 0 && (
+              <div className="grid gap-3 mb-4">
+                {detailUrls.map((url, i) => (
+                  <img
+                    key={url}
+                    src={url}
+                    alt={`Screenshot ${i + 1}`}
+                    className="w-full rounded-lg border"
+                    style={{ borderColor: 'var(--border)' }}
+                  />
+                ))}
+              </div>
             )}
 
             {selected.extracted_questions && (
