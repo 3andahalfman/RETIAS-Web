@@ -67,6 +67,13 @@ export default function AuthPage({ initialMode = 'signin' }: Props) {
     else if (err === 'auth_failed') setError('Sign-in failed. Please try again.')
   }, [])
 
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) router.replace(getNextPath())
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router])
+
   const strengthRules = getStrengthRules(password)
   const allRulesPass  = strengthRules.every(r => r.pass)
   const passwordsMatch = password === confirm
@@ -121,10 +128,22 @@ export default function AuthPage({ initialMode = 'signin' }: Props) {
     setLoading(true)
     try {
       if (mode === 'signin') {
-        const { error: err } = await supabase.auth.signInWithPassword({ email, password })
-        if (err) throw err
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email.trim(), password }),
+        })
+        const data = await res.json()
+        if (!res.ok) {
+          setError(data.error ?? 'Wrong email or password.')
+          return
+        }
+        const { error: sessionErr } = await supabase.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        })
+        if (sessionErr) throw sessionErr
         router.push(getNextPath())
-        router.refresh()
       } else {
         const res  = await fetch('/api/register', {
           method: 'POST',

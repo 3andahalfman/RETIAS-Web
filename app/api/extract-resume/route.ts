@@ -15,7 +15,7 @@ const ALLOWED_MIMES  = new Set([
 export async function POST(req: Request) {
   try {
     // Auth
-    const user = await getApiUser()
+    const user = await getApiUser(req)
     if (!user) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
 
     // Rate limit

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
+import { authFetch } from '@/lib/auth-fetch'
 import type { CV } from '@/lib/supabase'
 
 // ── ATS keyword scanner ────────────────────────────────────────────────────
@@ -194,7 +195,7 @@ export default function ResumeOptimizerPage() {
     try {
       const form = new FormData()
       form.append('file', file)
-      const res = await fetch('/api/extract-resume', { method: 'POST', body: form })
+      const res = await authFetch('/api/extract-resume', { method: 'POST', body: form })
       const data = await res.json()
       if (data.error) throw new Error(data.error)
       setResume(data.text ?? '')
@@ -213,7 +214,7 @@ export default function ResumeOptimizerPage() {
     setError('')
     setMode('scanning')
     try {
-      const res = await fetch('/api/resume-scan', {
+      const res = await authFetch('/api/resume-scan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ resume, jobDescription: jd }),
@@ -238,7 +239,7 @@ export default function ResumeOptimizerPage() {
     setError('')
     setMode('optimizing')
     try {
-      const res = await fetch('/api/resume-optimize', {
+      const res = await authFetch('/api/resume-optimize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ resume, jobDescription: jd, mode: 'optimize' }),
@@ -258,7 +259,7 @@ export default function ResumeOptimizerPage() {
   async function handleCoverLetter() {
     setCoverLoading(true)
     try {
-      const res = await fetch('/api/resume-optimize', {
+      const res = await authFetch('/api/resume-optimize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ resume: optimized || resume, jobDescription: jd, mode: 'cover-letter' }),

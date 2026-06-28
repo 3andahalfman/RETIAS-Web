@@ -1,8 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase'
-import { isAdminEmail } from '@/lib/admin'
+import { authFetch } from '@/lib/auth-fetch'
 
 interface BillingRow {
   user_id: string
@@ -48,16 +47,12 @@ export default function BillingPage() {
     setLoading(true)
     setError(null)
 
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user || !isAdminEmail(user.email)) {
-      setForbidden(true)
-      setLoading(false)
-      return
-    }
-
     try {
-      const res = await fetch('/api/admin/billing')
+      const res = await authFetch('/api/admin/billing')
+      if (res.status === 403 || res.status === 401) {
+        setForbidden(true)
+        return
+      }
       const body = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(body.error || 'Could not load billing data')
       setRows(body.rows ?? [])

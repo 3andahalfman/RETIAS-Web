@@ -2,8 +2,6 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase'
-import { passwordResetRedirectUrl } from '@/lib/auth-password'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
@@ -16,19 +14,19 @@ export default function ForgotPasswordPage() {
     setError('')
     setLoading(true)
     try {
-      const supabase = createClient()
-      const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: passwordResetRedirectUrl(),
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim() }),
       })
-      if (err) throw err
-      setSent(true)
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Could not send reset email.'
-      if (msg.toLowerCase().includes('rate limit')) {
-        setError('Too many attempts. Please wait and try again.')
-      } else {
-        setError(msg)
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error ?? 'Could not send reset email.')
+        return
       }
+      setSent(true)
+    } catch {
+      setError('Network error. Check your connection.')
     } finally {
       setLoading(false)
     }

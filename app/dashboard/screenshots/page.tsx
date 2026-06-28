@@ -1,19 +1,19 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase'
-import { isAdminEmail } from '@/lib/admin'
-const STORAGE_BUCKET = 'online-test-screenshots'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { authFetch } from '@/lib/auth-fetch'
+
+type Tab = 'captures' | 'solved'
+
 const SCREENSHOT_PATH_REGEX = /^[\w-]+\/[\w-]+\/\d+\.png$/
 
 async function fetchScreenshotUrl(path: string): Promise<string | null> {
   if (!SCREENSHOT_PATH_REGEX.test(path)) return null
-  const supabase = createClient()
-  const { data, error } = await supabase.storage
-    .from(STORAGE_BUCKET)
-    .createSignedUrl(path, 3600)
-  if (error) return null
-  return data?.signedUrl ?? null
+  const res = await authFetch(`/api/admin/captures/sign?path=${encodeURIComponent(path)}`)
+  if (!res.ok) return null
+  const data = await res.json()
+  return data.url ?? null
 }
 
 declare global {
@@ -48,6 +48,21 @@ interface CaptureStats {
   uniqueUsers: number
 }
 
+interface SolvedRow {
+  id: string
+  platform: string
+  assessment_type: string
+  question: string
+  answer: string
+  created_at: string
+}
+
+function preview(text: string, max = 90): string {
+  const t = text.replace(/\s+/g, ' ').trim()
+  if (t.length <= max) return t
+  return t.slice(0, max) + '…'
+}
+
 function formatTestType(type: string) {
   if (type.startsWith('role:')) return type.slice(5)
   return type.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
@@ -65,16 +80,23 @@ function formatDate(iso: string) {
 }
 
 async function deleteCaptures(ids: string[], paths: string[]): Promise<void> {
-  const supabase = createClient()
-  if (paths.length) {
-    const { error: storageErr } = await supabase.storage.from(STORAGE_BUCKET).remove(paths)
-    if (storageErr) console.warn('[ScreenshotLibrary] storage delete error:', storageErr.message)
-  }
-  const { error } = await supabase.from('online_test_captures').delete().in('id', ids)
-  if (error) throw new Error(error.message)
+  const res = await authFetch('/api/admin/captures', {
+    method: 'DELETE',
+    body: JSON.stringify({ ids, paths }),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error ?? 'Delete failed')
 }
 
 export default function ScreenshotLibraryPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const tab: Tab = searchParams.get('tab') === 'solved' ? 'solved' : 'captures'
+
+  const setTab = useCallback((next: Tab) => {
+    router.replace(next === 'solved' ? '/dashboard/screenshots?tab=solved' : '/dashboard/screenshots')
+  }, [router])
+
   const [captures, setCaptures] = useState<OnlineTestCapture[]>([])
   const [stats, setStats] = useState<CaptureStats | null>(null)
   const [loading, setLoading] = useState(true)
@@ -94,52 +116,63 @@ export default function ScreenshotLibraryPage() {
   const [thumbUrls, setThumbUrls] = useState<Record<string, string>>({})
   const [detailUrls, setDetailUrls] = useState<string[]>([])
 
-  const loadData = useCallback(async () => {
+  const [solvedRows, setSolvedRows] = useState<SolvedRow[]>([])
+  const [solvedLoading, setSolvedLoading] = useState(true)
+  const [solvedError, setSolvedError] = useState<string | null>(null)
+  const [solvedSearch, setSolvedSearch] = useState('')
+  const [expandedSolvedId, setExpandedSolvedId] = useState<string | null>(null)
+  const [deletingSolvedId, setDeletingSolvedId] = useState<string | null>(null)
+  const [deletingSolvedGroup, setDeletingSolvedGroup] = useState<string | null>(null)
+
+  const loadCaptures = useCallback(async () => {
     setLoading(true)
     setError(null)
-    const supabase = createClient()
 
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user || !isAdminEmail(user.email)) {
+    const res = await authFetch('/api/admin/captures')
+    if (res.status === 403 || res.status === 401) {
       setForbidden(true)
       setLoading(false)
       return
     }
 
-    const { data: rows, error: listErr } = await supabase
-      .from('online_test_captures')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(100)
-
-    if (listErr) {
-      setError(listErr.message)
+    const data = await res.json()
+    if (!res.ok) {
+      setError(data.error ?? 'Failed to load captures')
       setLoading(false)
       return
     }
 
-    const rowsTyped = (rows ?? []) as OnlineTestCapture[]
-    setCaptures(rowsTyped)
-
-    const { data: statsRows } = await supabase
-      .from('online_test_captures')
-      .select('user_id, score_overall')
-
-    const totalCaptures = statsRows?.length ?? 0
-    const scored = (statsRows ?? []).filter((r) => r.score_overall != null)
-    const avg = scored.length
-      ? scored.reduce((sum, r) => sum + Number(r.score_overall), 0) / scored.length
-      : null
-    setStats({
-      totalCaptures,
-      avgOverallScore: avg != null ? Math.round(avg * 10) / 10 : null,
-      uniqueUsers: new Set((statsRows ?? []).map((r) => r.user_id)).size,
-    })
-
+    setCaptures((data.captures ?? []) as OnlineTestCapture[])
+    setStats(data.stats ?? null)
     setLoading(false)
   }, [])
 
-  useEffect(() => { loadData() }, [loadData])
+  const loadSolved = useCallback(async () => {
+    setSolvedLoading(true)
+    setSolvedError(null)
+
+    const res = await authFetch('/api/admin/solved')
+    if (res.status === 403 || res.status === 401) {
+      setForbidden(true)
+      setSolvedLoading(false)
+      return
+    }
+
+    const data = await res.json()
+    if (!res.ok) {
+      setSolvedError(data.error ?? 'Failed to load solved questions')
+      setSolvedRows([])
+    } else {
+      setSolvedRows((data.rows ?? []) as SolvedRow[])
+    }
+    setSolvedLoading(false)
+  }, [])
+
+  const loadAll = useCallback(async () => {
+    await Promise.all([loadCaptures(), loadSolved()])
+  }, [loadCaptures, loadSolved])
+
+  useEffect(() => { void loadAll() }, [loadAll])
 
   const selected = captures.find((c) => c.id === selectedId) ?? null
 
@@ -250,30 +283,100 @@ export default function ScreenshotLibraryPage() {
         throw new Error('No questions to send. Add at least one question (separate multiple with a blank line).')
       }
 
-      const supabase = createClient()
       const rows = questions.map((q) => ({
         platform,
         assessment_type: assessment,
         question: q,
         answer,
-        answer_variants: [] as string[],
         paraphrase_enabled: sendParaphraseEnabled,
         source_capture_id: sendModalCap.id,
         source_url: sendModalCap.source_url,
       }))
 
-      const { error } = await supabase.from('solved_questions').insert(rows)
-      if (error) throw new Error(error.message)
-      setSendSuccess(
-        `Added ${rows.length} question${rows.length === 1 ? '' : 's'} to the Solved Assessment bank` +
-        (sendParaphraseEnabled ? ' (users can highlight to paraphrase/humanize).' : '.'),
-      )
+      const res = await authFetch('/api/admin/solved', {
+        method: 'POST',
+        body: JSON.stringify({ rows }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Insert failed')
+      await loadSolved()
+      closeSendModal()
+      setTab('solved')
     } catch (err) {
       setSendError(err instanceof Error ? err.message : 'Failed to send to Solved Assessment bank.')
     } finally {
       setSending(false)
     }
-  }, [sendModalCap, sendPlatform, sendAssessment, sendQuestionsText, sendAnswerText, sendParaphraseEnabled])
+  }, [sendModalCap, sendPlatform, sendAssessment, sendQuestionsText, sendAnswerText, sendParaphraseEnabled, closeSendModal, loadSolved, setTab])
+
+  const filteredSolved = useMemo(() => {
+    const q = solvedSearch.trim().toLowerCase()
+    if (!q) return solvedRows
+    return solvedRows.filter((r) =>
+      r.platform.toLowerCase().includes(q) ||
+      r.assessment_type.toLowerCase().includes(q) ||
+      r.question.toLowerCase().includes(q) ||
+      r.answer.toLowerCase().includes(q),
+    )
+  }, [solvedRows, solvedSearch])
+
+  const solvedGroups = useMemo(() => {
+    const map = new Map<string, SolvedRow[]>()
+    for (const row of filteredSolved) {
+      const key = `${row.platform}\0${row.assessment_type}`
+      if (!map.has(key)) map.set(key, [])
+      map.get(key)!.push(row)
+    }
+    return Array.from(map.entries())
+      .map(([key, items]) => {
+        const [platform, assessment_type] = key.split('\0')
+        return { platform, assessment_type, items }
+      })
+      .sort((a, b) => a.platform.localeCompare(b.platform) || a.assessment_type.localeCompare(b.assessment_type))
+  }, [filteredSolved])
+
+  const handleDeleteSolvedQuestion = useCallback(async (row: SolvedRow) => {
+    if (!confirm(`Remove this Q&A from Solved Assessment?\n\n"${preview(row.question, 120)}"\n\nPremium Plus users will no longer see it. This cannot be undone.`)) {
+      return
+    }
+    setDeletingSolvedId(row.id)
+    setSolvedError(null)
+    try {
+      const res = await authFetch('/api/admin/solved', {
+        method: 'DELETE',
+        body: JSON.stringify({ ids: [row.id] }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Delete failed')
+      setSolvedRows((prev) => prev.filter((r) => r.id !== row.id))
+    } catch (err) {
+      setSolvedError(err instanceof Error ? err.message : 'Delete failed')
+    } finally {
+      setDeletingSolvedId(null)
+    }
+  }, [])
+
+  const handleDeleteSolvedAssessment = useCallback(async (platform: string, assessment_type: string, count: number) => {
+    if (!confirm(`Remove all ${count} question${count !== 1 ? 's' : ''} in "${platform} · ${assessment_type}" from Solved Assessment?\n\nThis cannot be undone.`)) {
+      return
+    }
+    const groupKey = `${platform}\0${assessment_type}`
+    setDeletingSolvedGroup(groupKey)
+    setSolvedError(null)
+    try {
+      const res = await authFetch('/api/admin/solved', {
+        method: 'DELETE',
+        body: JSON.stringify({ platform, assessment_type }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Delete failed')
+      setSolvedRows((prev) => prev.filter((r) => !(r.platform === platform && r.assessment_type === assessment_type)))
+    } catch (err) {
+      setSolvedError(err instanceof Error ? err.message : 'Delete failed')
+    } finally {
+      setDeletingSolvedGroup(null)
+    }
+  }, [])
 
   if (forbidden) {
     return (
@@ -289,24 +392,46 @@ export default function ScreenshotLibraryPage() {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <div>
           <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Assessment Archive</h1>
           <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>
-            Scored online-test captures from all users — manage on the web dashboard.
+            Screenshot captures and Q&amp;A sent to Solved Assessment — manage both in one place.
           </p>
         </div>
         <button
           type="button"
-          onClick={loadData}
-          disabled={loading}
+          onClick={() => void loadAll()}
+          disabled={loading || solvedLoading}
           className="text-xs font-semibold px-3 py-2 rounded-lg transition-opacity hover:opacity-80 disabled:opacity-40"
           style={{ background: 'var(--surface)', color: 'var(--text-2)', border: '1px solid var(--border)' }}
         >
-          {loading ? 'Loading…' : '↻ Refresh'}
+          {loading || solvedLoading ? 'Loading…' : '↻ Refresh'}
         </button>
       </div>
 
+      <div className="flex rounded-lg p-1 mb-6 w-full max-w-md" style={{ background: 'rgba(0,0,0,0.3)' }}>
+        {([
+          { id: 'captures' as Tab, label: `Captures (${captures.length})` },
+          { id: 'solved' as Tab, label: `Sent to Solved (${solvedRows.length})` },
+        ]).map(({ id, label }) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setTab(id)}
+            className="flex-1 py-2 text-xs font-semibold rounded-md transition-all"
+            style={{
+              background: tab === id ? 'var(--blue)' : 'transparent',
+              color: tab === id ? '#fff' : 'var(--text-2)',
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'captures' && (
+        <>
       {/* Metrics */}
       <div className="grid grid-cols-3 gap-3 mb-6">
         {[
@@ -528,6 +653,96 @@ export default function ScreenshotLibraryPage() {
           </div>
         )}
       </div>
+        </>
+      )}
+
+      {tab === 'solved' && (
+        <>
+          <input
+            type="search"
+            placeholder="Search platform, assessment, question, or answer…"
+            value={solvedSearch}
+            onChange={(e) => setSolvedSearch(e.target.value)}
+            className="w-full rounded-xl px-4 py-2.5 text-sm mb-6"
+            style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-1)' }}
+          />
+
+          {solvedError && (
+            <div className="rounded-xl p-4 mb-4 text-sm" style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.3)', color: '#f87171' }}>
+              {solvedError}
+            </div>
+          )}
+
+          {!solvedLoading && solvedGroups.length === 0 && !solvedError && (
+            <div className="glass py-14 text-center">
+              <p className="text-4xl mb-3">📚</p>
+              <p className="text-sm" style={{ color: 'var(--text-2)' }}>Nothing sent to Solved Assessment yet.</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>
+                Open a capture and use 📤 Send to add Q&amp;A for Premium Plus users.
+              </p>
+            </div>
+          )}
+
+          <div className="space-y-6">
+            {solvedGroups.map(({ platform, assessment_type, items }) => {
+              const groupKey = `${platform}\0${assessment_type}`
+              return (
+                <section key={groupKey} className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+                  <div className="flex items-center justify-between px-4 py-3" style={{ background: 'var(--surface)' }}>
+                    <div>
+                      <p className="text-sm font-bold" style={{ color: 'var(--text-1)' }}>{platform}</p>
+                      <p className="text-xs" style={{ color: 'var(--text-3)' }}>{assessment_type} · {items.length} question{items.length !== 1 ? 's' : ''}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteSolvedAssessment(platform, assessment_type, items.length)}
+                      disabled={deletingSolvedGroup === groupKey}
+                      className="text-[10px] font-medium px-2 py-1 rounded-md hover:bg-red-500/10 disabled:opacity-40"
+                      style={{ color: '#f87171', border: '1px solid var(--border)' }}
+                      title="Remove entire assessment from Solved"
+                    >
+                      {deletingSolvedGroup === groupKey ? 'Deleting…' : '🗑 Delete all'}
+                    </button>
+                  </div>
+                  <ul>
+                    {items.map((row) => (
+                      <li key={row.id} className="border-t px-4 py-3" style={{ borderColor: 'var(--border)' }}>
+                        <div className="flex items-start justify-between gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setExpandedSolvedId(expandedSolvedId === row.id ? null : row.id)}
+                            className="flex-1 text-left min-w-0"
+                          >
+                            <p className="text-sm font-medium" style={{ color: 'var(--text-1)' }}>
+                              {expandedSolvedId === row.id ? row.question : preview(row.question)}
+                            </p>
+                            {expandedSolvedId === row.id && (
+                              <pre className="text-xs mt-2 p-3 rounded-lg overflow-auto max-h-60"
+                                style={{ background: 'rgba(0,0,0,0.25)', color: 'var(--text-2)', whiteSpace: 'pre-wrap' }}>
+                                {row.answer}
+                              </pre>
+                            )}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteSolvedQuestion(row)}
+                            disabled={deletingSolvedId === row.id}
+                            className="text-base p-1 rounded-md hover:bg-red-500/10 shrink-0 disabled:opacity-40"
+                            style={{ color: '#f87171' }}
+                            title="Remove from Solved Assessment"
+                          >
+                            {deletingSolvedId === row.id ? '…' : '🗑'}
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )
+            })}
+          </div>
+        </>
+      )}
 
       {sendModalCap && (
         <div
@@ -537,7 +752,7 @@ export default function ScreenshotLibraryPage() {
         >
           <div
             className="w-full max-w-lg rounded-xl p-5 max-h-[90vh] overflow-y-auto"
-            style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+            style={{ background: '#14141c', border: '1px solid var(--border)', boxShadow: '0 24px 48px rgba(0,0,0,0.6)' }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-3">
@@ -556,7 +771,7 @@ export default function ScreenshotLibraryPage() {
             <input
               type="text"
               className="w-full rounded-lg px-3 py-2 text-sm mb-3"
-              style={{ background: 'rgba(0,0,0,0.25)', border: '1px solid var(--border)', color: 'var(--text-1)' }}
+              style={{ background: '#0d0d12', border: '1px solid var(--border)', color: 'var(--text-1)' }}
               placeholder="e.g. Outlier, HackerRank, Mettl"
               value={sendPlatform}
               onChange={(e) => setSendPlatform(e.target.value)}
@@ -566,7 +781,7 @@ export default function ScreenshotLibraryPage() {
             <input
               type="text"
               className="w-full rounded-lg px-3 py-2 text-sm mb-3"
-              style={{ background: 'rgba(0,0,0,0.25)', border: '1px solid var(--border)', color: 'var(--text-1)' }}
+              style={{ background: '#0d0d12', border: '1px solid var(--border)', color: 'var(--text-1)' }}
               placeholder="e.g. Aether Onboarding, Skill: Python"
               value={sendAssessment}
               onChange={(e) => setSendAssessment(e.target.value)}
@@ -577,7 +792,7 @@ export default function ScreenshotLibraryPage() {
             </label>
             <textarea
               className="w-full rounded-lg px-3 py-2 text-sm mb-3 font-mono"
-              style={{ background: 'rgba(0,0,0,0.25)', border: '1px solid var(--border)', color: 'var(--text-1)' }}
+              style={{ background: '#0d0d12', border: '1px solid var(--border)', color: 'var(--text-1)' }}
               rows={6}
               value={sendQuestionsText}
               onChange={(e) => setSendQuestionsText(e.target.value)}
@@ -586,7 +801,7 @@ export default function ScreenshotLibraryPage() {
             <label className="block text-xs font-semibold mb-1" style={{ color: 'var(--text-2)' }}>Answer</label>
             <textarea
               className="w-full rounded-lg px-3 py-2 text-sm mb-3 font-mono"
-              style={{ background: 'rgba(0,0,0,0.25)', border: '1px solid var(--border)', color: 'var(--text-1)' }}
+              style={{ background: '#0d0d12', border: '1px solid var(--border)', color: 'var(--text-1)' }}
               rows={8}
               value={sendAnswerText}
               onChange={(e) => setSendAnswerText(e.target.value)}

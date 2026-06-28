@@ -1,10 +1,21 @@
-import { createBrowserClient } from '@supabase/ssr'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
-const SUPABASE_URL  = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
+/** Browser auth session persisted in localStorage (not cookies). */
+export const AUTH_STORAGE_KEY = 'retias-auth'
+
 export function createClient() {
-  return createBrowserClient(SUPABASE_URL, SUPABASE_ANON)
+  return createSupabaseClient(SUPABASE_URL, SUPABASE_ANON, {
+    auth: {
+      persistSession: true,
+      storageKey: AUTH_STORAGE_KEY,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+    },
+  })
 }
 
 // ── Types matching the desktop app schema ──────────────────────────────────

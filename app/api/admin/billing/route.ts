@@ -26,8 +26,8 @@ function tierLabel(tier: string | null): string {
   return 'Unknown'
 }
 
-export async function GET() {
-  const user = await getApiUser()
+export async function GET(req: Request) {
+  const user = await getApiUser(req)
   if (!user) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
   if (!isAdminEmail(user.email)) {
     return NextResponse.json({ error: 'Admin only.' }, { status: 403 })

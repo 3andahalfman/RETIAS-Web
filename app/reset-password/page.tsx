@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
+import { authFetch } from '@/lib/auth-fetch'
 import PasswordEyeButton from '@/components/PasswordEyeButton'
 import { getStrengthRules, validatePassword } from '@/lib/auth-password'
 
@@ -26,8 +27,21 @@ export default function ResetPasswordPage() {
   useEffect(() => {
     const supabase = createClient()
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) router.replace('/login?error=reset_expired')
-      else setChecking(false)
+      if (session) {
+        setChecking(false)
+        return
+      }
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+        if (nextSession) {
+          setChecking(false)
+          subscription.unsubscribe()
+        }
+      })
+      setTimeout(() => {
+        supabase.auth.getSession().then(({ data: { session: s } }) => {
+          if (!s) router.replace('/login?error=reset_expired')
+        })
+      }, 1500)
     })
   }, [router])
 
@@ -41,9 +55,12 @@ export default function ResetPasswordPage() {
 
     setLoading(true)
     try {
-      const supabase = createClient()
-      const { error: err } = await supabase.auth.updateUser({ password })
-      if (err) throw err
+      const res = await authFetch('/api/auth/reset-password', {
+        method: 'POST',
+        body: JSON.stringify({ password }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Could not update password.')
       setDone(true)
       setTimeout(() => router.push('/dashboard'), 1500)
     } catch (err) {

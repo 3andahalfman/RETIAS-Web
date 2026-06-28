@@ -11,7 +11,7 @@ const MAX_JD_LEN     = 30_000
 export async function POST(req: Request) {
   try {
     // Auth
-    const user = await getApiUser()
+    const user = await getApiUser(req)
     if (!user) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
 
     // Rate limit

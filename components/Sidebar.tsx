@@ -4,6 +4,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase'
+import { authFetch } from '@/lib/auth-fetch'
 import PricingModal from '@/components/PricingModal'
 
 import { isAdminEmail } from '@/lib/admin'
@@ -17,7 +18,6 @@ const NAV = [
 
 const ADMIN_NAV = [
   { href: '/dashboard/screenshots', icon: '🗂️', label: 'Assessment Archive' },
-  { href: '/dashboard/solved', icon: '📚', label: 'Solved Bank' },
   { href: '/dashboard/billing', icon: '💳', label: 'Billing' },
 ]
 
@@ -48,8 +48,10 @@ export default function Sidebar({ user, isPremium }: { user: User; isPremium: bo
   const isPlus = user.app_metadata?.is_premium_plus === true || isAdminEmail(user.email)
 
   async function handleLogout() {
-    const supabase = createClient()
-    await supabase.auth.signOut()
+    try {
+      await authFetch('/api/auth/logout', { method: 'POST' })
+    } catch { /* still clear local session */ }
+    await createClient().auth.signOut()
     router.replace('/login')
   }
 
