@@ -291,9 +291,9 @@ export default function ScreenshotLibraryPage() {
     <div className="max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Screenshot Library</h1>
+          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Assessment Archive</h1>
           <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>
-            Scored online-test captures from all users — admin only.
+            Scored online-test captures from all users — manage on the web dashboard.
           </p>
         </div>
         <button

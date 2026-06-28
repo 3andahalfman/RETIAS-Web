@@ -16,7 +16,8 @@ const NAV = [
 ]
 
 const ADMIN_NAV = [
-  { href: '/dashboard/screenshots', icon: '📸', label: 'Screenshot Library' },
+  { href: '/dashboard/screenshots', icon: '🗂️', label: 'Assessment Archive' },
+  { href: '/dashboard/solved', icon: '📚', label: 'Solved Bank' },
   { href: '/dashboard/billing', icon: '💳', label: 'Billing' },
 ]
 
