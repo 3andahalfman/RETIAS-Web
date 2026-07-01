@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireAdmin, serviceRoleClient } from '@/lib/api-auth'
 import { parseJsonBody, sanitizeText, sanitizeUuid } from '@/lib/input-validation'
+import { classifySolvedQuestionCategory } from '@/lib/solved-question-category'
 
 export async function GET(req: Request) {
   const gate = await requireAdmin(req)
@@ -52,9 +53,10 @@ export async function POST(req: Request) {
         const question = sanitizeText(r.question, 8000)
         const answer = sanitizeText(r.answer, 8000)
         if (!platform || !assessment_type || !question || !answer) return null
+        const category = classifySolvedQuestionCategory(question, assessment_type)
         return {
           platform,
-          assessment_type,
+          assessment_type: category,
           question,
           answer,
           answer_variants: [] as string[],
@@ -100,11 +102,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'platform, assessment_type, question, and answer are required.' }, { status: 400 })
   }
 
+  const category = classifySolvedQuestionCategory(question, assessment_type)
+
   const { data, error } = await admin
     .from('solved_questions')
     .upsert({
       platform,
-      assessment_type,
+      assessment_type: category,
       question,
       answer,
       answer_variants: [],

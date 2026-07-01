@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { authFetch } from '@/lib/auth-fetch'
+import { classifySolvedQuestionCategory, getSolvedCategoryLabel } from '@/lib/solved-question-category'
 
 type Tab = 'captures' | 'solved'
 
@@ -348,7 +349,7 @@ export default function ScreenshotLibraryPage() {
       const platform = sendPlatform.trim()
       const assessment = sendAssessment.trim()
       const answer = sendAnswerText.trim()
-      if (!platform || !assessment) throw new Error('Platform and assessment type are required.')
+      if (!platform || !assessment) throw new Error('Platform is required.')
       if (!answer) throw new Error('Answer cannot be empty.')
 
       const questions = sendQuestionsText
@@ -361,7 +362,7 @@ export default function ScreenshotLibraryPage() {
 
       const rows = questions.map((q) => ({
         platform,
-        assessment_type: assessment,
+        assessment_type: classifySolvedQuestionCategory(q, assessment),
         question: q,
         answer,
         paraphrase_enabled: sendParaphraseEnabled,
@@ -387,27 +388,36 @@ export default function ScreenshotLibraryPage() {
   const filteredSolved = useMemo(() => {
     const q = solvedSearch.trim().toLowerCase()
     if (!q) return solvedRows
-    return solvedRows.filter((r) =>
-      r.platform.toLowerCase().includes(q) ||
-      r.assessment_type.toLowerCase().includes(q) ||
-      r.question.toLowerCase().includes(q) ||
-      r.answer.toLowerCase().includes(q),
-    )
+    return solvedRows.filter((r) => {
+      const category = classifySolvedQuestionCategory(r.question, r.assessment_type)
+      const categoryLabel = getSolvedCategoryLabel(category).toLowerCase()
+      return (
+        r.platform.toLowerCase().includes(q) ||
+        r.assessment_type.toLowerCase().includes(q) ||
+        categoryLabel.includes(q) ||
+        r.question.toLowerCase().includes(q) ||
+        r.answer.toLowerCase().includes(q)
+      )
+    })
   }, [solvedRows, solvedSearch])
 
   const solvedGroups = useMemo(() => {
     const map = new Map<string, SolvedRow[]>()
     for (const row of filteredSolved) {
-      const key = `${row.platform}\0${row.assessment_type}`
+      const category = classifySolvedQuestionCategory(row.question, row.assessment_type)
+      const key = `${row.platform}\0${category}`
       if (!map.has(key)) map.set(key, [])
       map.get(key)!.push(row)
     }
     return Array.from(map.entries())
       .map(([key, items]) => {
-        const [platform, assessment_type] = key.split('\0')
-        return { platform, assessment_type, items }
+        const [platform, category] = key.split('\0')
+        return { platform, category, items }
       })
-      .sort((a, b) => a.platform.localeCompare(b.platform) || a.assessment_type.localeCompare(b.assessment_type))
+      .sort((a, b) =>
+        a.platform.localeCompare(b.platform) ||
+        getSolvedCategoryLabel(a.category).localeCompare(getSolvedCategoryLabel(b.category)),
+      )
   }, [filteredSolved])
 
   const handleDeleteSolvedQuestion = useCallback(async (row: SolvedRow) => {
@@ -431,21 +441,23 @@ export default function ScreenshotLibraryPage() {
     }
   }, [])
 
-  const handleDeleteSolvedAssessment = useCallback(async (platform: string, assessment_type: string, count: number) => {
-    if (!confirm(`Remove all ${count} question${count !== 1 ? 's' : ''} in "${platform} · ${assessment_type}" from Solved Assessment?\n\nThis cannot be undone.`)) {
+  const handleDeleteSolvedAssessment = useCallback(async (platform: string, category: string, items: SolvedRow[]) => {
+    const label = getSolvedCategoryLabel(category)
+    if (!confirm(`Remove all ${items.length} question${items.length !== 1 ? 's' : ''} in "${platform} · ${label}" from Solved Assessment?\n\nThis cannot be undone.`)) {
       return
     }
-    const groupKey = `${platform}\0${assessment_type}`
+    const groupKey = `${platform}\0${category}`
     setDeletingSolvedGroup(groupKey)
     setSolvedError(null)
     try {
       const res = await authFetch('/api/admin/solved', {
         method: 'DELETE',
-        body: JSON.stringify({ platform, assessment_type }),
+        body: JSON.stringify({ ids: items.map((r) => r.id) }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Delete failed')
-      setSolvedRows((prev) => prev.filter((r) => !(r.platform === platform && r.assessment_type === assessment_type)))
+      const removed = new Set(items.map((r) => r.id))
+      setSolvedRows((prev) => prev.filter((r) => !removed.has(r.id)))
     } catch (err) {
       setSolvedError(err instanceof Error ? err.message : 'Delete failed')
     } finally {
@@ -831,18 +843,18 @@ export default function ScreenshotLibraryPage() {
           )}
 
           <div className="space-y-6">
-            {solvedGroups.map(({ platform, assessment_type, items }) => {
-              const groupKey = `${platform}\0${assessment_type}`
+            {solvedGroups.map(({ platform, category, items }) => {
+              const groupKey = `${platform}\0${category}`
               return (
                 <section key={groupKey} className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
                   <div className="flex items-center justify-between px-4 py-3" style={{ background: 'var(--surface)' }}>
                     <div>
                       <p className="text-sm font-bold" style={{ color: 'var(--text-1)' }}>{platform}</p>
-                      <p className="text-xs" style={{ color: 'var(--text-3)' }}>{assessment_type} · {items.length} question{items.length !== 1 ? 's' : ''}</p>
+                      <p className="text-xs" style={{ color: 'var(--text-3)' }}>{getSolvedCategoryLabel(category)} · {items.length} question{items.length !== 1 ? 's' : ''}</p>
                     </div>
                     <button
                       type="button"
-                      onClick={() => handleDeleteSolvedAssessment(platform, assessment_type, items.length)}
+                      onClick={() => handleDeleteSolvedAssessment(platform, category, items)}
                       disabled={deletingSolvedGroup === groupKey}
                       className="text-[10px] font-medium px-2 py-1 rounded-md hover:bg-red-500/10 disabled:opacity-40"
                       style={{ color: '#f87171', border: '1px solid var(--border)' }}
@@ -931,15 +943,18 @@ export default function ScreenshotLibraryPage() {
               onChange={(e) => setSendPlatform(e.target.value)}
             />
 
-            <label className="block text-xs font-semibold mb-1" style={{ color: 'var(--text-2)' }}>Assessment Type</label>
+            <label className="block text-xs font-semibold mb-1" style={{ color: 'var(--text-2)' }}>Assessment hint (optional)</label>
             <input
               type="text"
-              className="w-full rounded-lg px-3 py-2 text-sm mb-3"
+              className="w-full rounded-lg px-3 py-2 text-sm mb-1"
               style={{ background: '#0d0d12', border: '1px solid var(--border)', color: 'var(--text-1)' }}
-              placeholder="e.g. Aether Onboarding, Skill: Python"
+              placeholder="e.g. coding, behavioural — used only as a hint"
               value={sendAssessment}
               onChange={(e) => setSendAssessment(e.target.value)}
             />
+            <p className="text-[10px] mb-3" style={{ color: 'var(--text-3)' }}>
+              Each question is auto-sorted into Python, SQL, Generalist, etc. based on its content.
+            </p>
 
             <label className="block text-xs font-semibold mb-1" style={{ color: 'var(--text-2)' }}>
               Questions (blank line between each)
